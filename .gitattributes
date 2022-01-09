@@ -1,0 +1,10 @@
+.gitattributes         export-ignore
+.github                export-ignore
+.gitignore             export-ignore
+examples               export-ignore
+phpunit.xml            export-ignore
+psalm.xml              export-ignore
+tests                  export-ignore
+Dockerfile             export-ignore
+docker-compose.yml     export-ignore
+Makefile               export-ignore
