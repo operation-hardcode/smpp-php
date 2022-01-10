@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace OperationHardcode\Smpp\Interaction;
 
 use Amp;
-use OperationHardcode\Smpp;
 use OperationHardcode\Smpp\Protocol\Command;
+use OperationHardcode\Smpp\Protocol\CommandStatus;
+use OperationHardcode\Smpp\Protocol\FrameParser;
 use OperationHardcode\Smpp\Sequence;
 use OperationHardcode\Smpp\Transport\AmpStreamConnection;
 use OperationHardcode\Smpp\Transport\Connection;
@@ -14,14 +15,40 @@ use OperationHardcode\Smpp\Transport\ConnectionContext;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * @psalm-type ConnectionFactory = callable(ConnectionContext, LoggerInterface): Amp\Promise<Connection>
+ */
 final class Connector
 {
-    public static function asTransceiver(ConnectionContext $context, LoggerInterface $logger = new NullLogger()): SmppExecutor
+    /**
+     * @var ConnectionFactory
+     */
+    private $connectionFn;
+
+    /**
+     * @psalm-param ConnectionFactory|null $connectionFn
+     */
+    private function __construct(?callable $connectionFn = null)
+    {
+        $this->connectionFn = $connectionFn ?: function (ConnectionContext $context, LoggerInterface $logger): Amp\Promise {
+            return AmpStreamConnection::new($context, $logger);
+        };
+    }
+
+    /**
+     * @psalm-param ConnectionFactory|null $connectionFn
+     */
+    public static function connect(?callable $connectionFn = null): Connector
+    {
+        return new Connector($connectionFn);
+    }
+
+    public function asTransceiver(ConnectionContext $context, LoggerInterface $logger = new NullLogger()): SmppExecutor
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
             return Amp\call(function () use ($context, $logger): \Generator {
                 /** @var Connection $connection */
-                $connection = yield AmpStreamConnection::new($context, $logger);
+                $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
                 yield $connection->write(
                     (new Command\BindTransceiver($context->systemId, $context->password))
@@ -29,7 +56,7 @@ final class Connector
                 );
 
                 try {
-                    yield Smpp\establish($connection, Command\BindTransceiverResp::class, $context->establishTimeout);
+                    yield $this->establish($connection, Command\BindTransceiverResp::class, $context->establishTimeout);
 
                     $logger->debug('Connected as transceiver...');
 
@@ -49,12 +76,12 @@ final class Connector
         });
     }
 
-    public static function asReceiver(ConnectionContext $context, LoggerInterface $logger = new NullLogger()): SmppExecutor
+    public function asReceiver(ConnectionContext $context, LoggerInterface $logger = new NullLogger()): SmppExecutor
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
             return Amp\call(function () use ($context, $logger): \Generator {
                 /** @var Connection $connection */
-                $connection = yield AmpStreamConnection::new($context, $logger);
+                $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
                 yield $connection->write(
                     (new Command\BindReceiver($context->systemId, $context->password))
@@ -62,7 +89,7 @@ final class Connector
                 );
 
                 try {
-                    yield Smpp\establish($connection, Command\BindReceiverResp::class, $context->establishTimeout);
+                    yield $this->establish($connection, Command\BindReceiverResp::class, $context->establishTimeout);
 
                     $logger->debug('Connected as receiver...');
 
@@ -82,12 +109,12 @@ final class Connector
         });
     }
 
-    public static function asTransmitter(ConnectionContext $context, LoggerInterface $logger = new NullLogger()): SmppExecutor
+    public function asTransmitter(ConnectionContext $context, LoggerInterface $logger = new NullLogger()): SmppExecutor
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
             return Amp\call(function () use ($context, $logger): \Generator {
                 /** @var Connection $connection */
-                $connection = yield AmpStreamConnection::new($context, $logger);
+                $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
                 yield $connection->write(
                     (new Command\BindTransmitter($context->systemId, $context->password))
@@ -95,7 +122,7 @@ final class Connector
                 );
 
                 try {
-                    yield Smpp\establish($connection, Command\BindTransmitterResp::class, $context->establishTimeout);
+                    yield $this->establish($connection, Command\BindTransmitterResp::class, $context->establishTimeout);
 
                     $logger->debug('Connected as transmitter...');
 
@@ -113,5 +140,39 @@ final class Connector
                 }
             });
         });
+    }
+
+    /**
+     * @psalm-param class-string<Command\BindReceiverResp>|class-string<Command\BindTransceiverResp>|class-string<Command\BindTransmitterResp> $waitableResponse
+     *
+     * @psalm-return Amp\Success<void>|Amp\Failure<\Throwable>
+     */
+    private function establish(Connection $connection, string $waitableResponse, int $timeout): Amp\Promise
+    {
+        /** @psalm-var Amp\Success<void>|Amp\Failure<\Throwable>  */
+        return Amp\Promise\timeout(Amp\call(function () use ($connection, $waitableResponse): \Generator {
+            await:
+
+            if (null !== ($bytes = yield $connection->read())) {
+                if (FrameParser::hasFrame($bytes)) {
+                    /** @var Command\BindReceiverResp|Command\BindTransmitterResp|Command\BindTransceiverResp $frame */
+                    $frame = FrameParser::parse($bytes);
+
+                    if ($frame instanceof $waitableResponse) {
+                        if ($frame->commandStatus === CommandStatus::ESME_ROK) {
+                            return new Amp\Success();
+                        }
+
+                        return new Amp\Failure(new ConnectionWasNotEstablished(sprintf('Received command status "%s".', $frame->commandStatus->name)));
+                    }
+
+                    return new Amp\Failure(new ConnectionWasNotEstablished(sprintf('The command "%s" is not valid response, expected command "%s".', get_class($frame), $waitableResponse)));
+                }
+            }
+
+            yield Amp\delay(1);
+
+            goto await;
+        }), $timeout);
     }
 }

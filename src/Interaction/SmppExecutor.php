@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace OperationHardcode\Smpp\Interaction;
 
 use Amp;
-use OperationHardcode\Smpp\Protocol\Command\EnquireLinkResp;
 use OperationHardcode\Smpp\Protocol\Command\Unbind;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Sequence;
@@ -24,11 +23,6 @@ final class SmppExecutor
      * @psalm-var (callable(SmppExecutor): (void|Amp\Promise<void>))[]
      */
     private array $onShutdownCallbacks = [];
-
-    /**
-     * @var array<int, PDU|null>
-     */
-    private array $heartbeatQueue = [];
     private ?Connection $connection = null;
 
     /**
@@ -69,13 +63,7 @@ final class SmppExecutor
     public function consume(callable $onMessage): Amp\Promise
     {
         return Amp\call(function () use ($onMessage): \Generator {
-            return Consumer::new(yield $this->connect())
-                ->onEachMessage(function (PDU $pdu): void {
-                    if ($pdu instanceof EnquireLinkResp && isset($this->heartbeatQueue[$pdu->sequence()])) {
-                        $this->heartbeatQueue[$pdu->sequence()] = $pdu;
-                    }
-                })
-                ->listen($onMessage, $this);
+            return Consumer::new(yield $this->connect())->listen($onMessage, $this);
         });
     }
 
@@ -89,6 +77,8 @@ final class SmppExecutor
             $connection = yield $this->connect();
 
             if (Sequence::delegate()->overflow()) {
+                Sequence::delegate()->reset();
+
                 /** @var Connection $connection */
                 $connection = yield $this->reconnect();
             }
@@ -153,7 +143,13 @@ final class SmppExecutor
     private function doConnect(): Amp\Promise
     {
         return Amp\call(function (): \Generator {
-            $this->connection = yield Amp\call($this->establisher, $this->context);
+            try {
+                $this->connection = yield Amp\call($this->establisher, $this->context);
+            } catch (\Throwable $e) {
+                $this->logger->error($e->getMessage(), ['exception' => $e]);
+
+                throw new ConnectionWasNotEstablished($e->getMessage(), $e->getCode(), $e);
+            }
 
             foreach ($this->onConnectCallbacks as $fn) {
                 Amp\asyncCall($fn, $this);
