@@ -34,12 +34,12 @@ final class ConnectionContext
     /**
      * Period in which producer should send the enquire link command (in milliseconds).
      */
-    public readonly ?int $enquirePeriod;
+    public readonly ?int $heartbeatInterval;
 
     /**
      * Timeout during which we are waiting for a successful connection confirmation (in milliseconds).
      */
-    public readonly int $enquireTimeout;
+    public readonly int $heartbeatTimeout;
 
     /**
      * Timeout within which the SMSC must return current connection mode response: bind receiver, bind transmitter or bind transceiver response (in milliseconds).
@@ -54,9 +54,9 @@ final class ConnectionContext
         int $attempts,
         bool $noDelay,
         ClientTlsContext $clientTlsContext,
-        ?int $enquirePeriod = null,
         int $establishTimeout = 10000,
-        int $enquireTimeout = 20000
+        ?int $heartbeatInterval = null,
+        int $heartbeatTimeout = 20000
     ) {
         $this->systemId = $systemId;
         $this->password = $password;
@@ -65,12 +65,12 @@ final class ConnectionContext
         $this->attempts = $attempts;
         $this->noDelay = $noDelay;
         $this->clientTlsContext = $clientTlsContext;
-        $this->enquirePeriod = $enquirePeriod;
         $this->establishTimeout = $establishTimeout;
-        $this->enquireTimeout = $enquireTimeout;
+        $this->heartbeatInterval = $heartbeatInterval;
+        $this->heartbeatTimeout = $heartbeatTimeout;
     }
 
-    public static function default(string $uri, string $systemId, string $password, ?int $enquirePeriod = null, int $establishTimeout = 10000, int $enquireTimeout = 20000): ConnectionContext
+    public static function default(string $uri, string $systemId, string $password, int $establishTimeout = 10000, ?int $heartbeatInterval = null, int $heartbeatTimeout = 20000): ConnectionContext
     {
         return new ConnectionContext(
             $systemId,
@@ -80,9 +80,9 @@ final class ConnectionContext
             0,
             false,
             (new ClientTlsContext(''))->withoutPeerVerification(),
-            $enquirePeriod,
             $establishTimeout,
-            $enquireTimeout
+            $heartbeatInterval,
+            $heartbeatTimeout,
         );
     }
 }

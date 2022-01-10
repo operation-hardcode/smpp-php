@@ -11,8 +11,9 @@ use function Amp\Sync\synchronized;
 
 final class Sequence
 {
-    private static int $current = 0;
     private const THRESHOLD = 0x7FFFFFFF;
+
+    private static int $current = 0;
     private static Mutex $mutex;
     private static ?Sequence $seq = null;
 
@@ -40,6 +41,7 @@ final class Sequence
      */
     public function next(): Promise
     {
+        /** @var Promise<int> */
         return synchronized(self::$mutex, function (): int {
             return ++self::$current;
         });
