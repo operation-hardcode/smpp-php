@@ -74,7 +74,7 @@ final class Heartbeat implements
         });
     }
 
-    public function afterConnectionClosed(SmppExecutor $smppExecutor): Amp\Promise
+    public function afterConnectionClosed(?\Throwable $e = null): Amp\Promise
     {
         if ($this->id !== null) {
             Amp\Loop::cancel($this->id);

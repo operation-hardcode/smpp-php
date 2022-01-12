@@ -17,13 +17,13 @@ final class MonitorConnection implements AfterConnectionEstablishedExtension, Af
     private $onConnection;
 
     /**
-     * @var callable(SmppExecutor): Amp\Promise<void>
+     * @var callable(?\Throwable): Amp\Promise<void>
      */
     private $onDisconnection;
 
     /**
      * @psalm-param callable(SmppExecutor): Amp\Promise<void> $onConnection
-     * @psalm-param callable(SmppExecutor): Amp\Promise<void> $onDisconnection
+     * @psalm-param callable(?\Throwable): Amp\Promise<void> $onDisconnection
      */
     public function __construct(callable $onConnection, callable $onDisconnection)
     {
@@ -42,8 +42,8 @@ final class MonitorConnection implements AfterConnectionEstablishedExtension, Af
     /**
      * {@inheritdoc}
      */
-    public function afterConnectionClosed(SmppExecutor $smppExecutor): Amp\Promise
+    public function afterConnectionClosed(?\Throwable $e = null): Amp\Promise
     {
-        return Amp\call($this->onDisconnection, $smppExecutor);
+        return Amp\call($this->onDisconnection, $e);
     }
 }
