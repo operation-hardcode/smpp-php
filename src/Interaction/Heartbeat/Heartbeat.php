@@ -24,7 +24,7 @@ final class Heartbeat implements
     private ?string $id = null;
 
     /**
-     * @var array<int, EnquireLinkResp|null>
+     * @var array<int, ?EnquireLinkResp>
      */
     private array $heartbeats = [];
 
@@ -35,10 +35,14 @@ final class Heartbeat implements
     ) {
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function afterConnectionEstablished(SmppExecutor $smppExecutor): Amp\Promise
     {
         return Amp\call(function () use ($smppExecutor): void {
             $this->id = Amp\Loop::repeat($this->interval->duration, function () use ($smppExecutor): \Generator {
+                /** @var int $sequence */
                 $sequence = yield $smppExecutor->produce(new EnquireLink());
 
                 $this->logger->debug('Sending heartbeat with id "{id}".', [
@@ -54,6 +58,8 @@ final class Heartbeat implements
                         ]);
 
                         Amp\Loop::cancel($watcherId);
+
+                        \assert(!\is_null($this->id));
                         Amp\Loop::cancel($this->id);
 
                         yield $smppExecutor->fin();
@@ -65,15 +71,21 @@ final class Heartbeat implements
         });
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function afterPduConsumed(PDU $pdu, SmppExecutor $smppExecutor): Amp\Promise
     {
-        return Amp\call(function () use ($pdu, $smppExecutor): void {
+        return Amp\call(function () use ($pdu): void {
             if ($pdu instanceof EnquireLinkResp) {
                 $this->heartbeats[$pdu->sequence()] = $pdu;
             }
         });
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function afterConnectionClosed(?\Throwable $e = null): Amp\Promise
     {
         if ($this->id !== null) {

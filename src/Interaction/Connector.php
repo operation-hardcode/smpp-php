@@ -47,7 +47,6 @@ final class Connector
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
             return Amp\call(function () use ($context, $logger): \Generator {
-                /** @var Connection $connection */
                 $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
                 yield $connection->write(
@@ -80,7 +79,6 @@ final class Connector
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
             return Amp\call(function () use ($context, $logger): \Generator {
-                /** @var Connection $connection */
                 $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
                 yield $connection->write(
@@ -113,7 +111,6 @@ final class Connector
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
             return Amp\call(function () use ($context, $logger): \Generator {
-                /** @var Connection $connection */
                 $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
                 yield $connection->write(

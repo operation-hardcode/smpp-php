@@ -36,13 +36,17 @@ final class Buffer extends ByteBuffer
     {
         $value ??= '';
 
-        return $this->append(\pack("a".\strlen($value) + 1, $value));
+        /** @psalm-var string $bytes */
+        $bytes = \pack("a".(\strlen($value) + 1), $value);
+
+        return $this->append($bytes);
     }
 
     public function consumeString(): string
     {
         $string = '';
 
+        /** @var array<int, int> $bytes */
         $bytes = \unpack('C*', $this->bytes());
 
         for ($cursor = 1; $cursor <= count($bytes); $cursor++) {
@@ -68,6 +72,9 @@ final class Buffer extends ByteBuffer
     {
         $body = $this->bytes();
 
-        return pack('NNNN', strlen($body) + self::HEADER_SIZE, $command->value, $status?->value, $sequence).$body;
+        /** @psalm-var string $headers */
+        $headers = pack('NNNN', strlen($body) + self::HEADER_SIZE, $command->value, $status?->value, $sequence);
+
+        return $headers.$body;
     }
 }

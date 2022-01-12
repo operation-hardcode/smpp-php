@@ -47,6 +47,7 @@ final class Consumer
      */
     public function listen(callable $onMessage, SmppExecutor $executor): Amp\Promise
     {
+        /** @psalm-var Amp\Success<void>|Amp\Failure<\Throwable> */
         return Amp\call(function () use ($onMessage, $executor): \Generator {
             $running = true;
 

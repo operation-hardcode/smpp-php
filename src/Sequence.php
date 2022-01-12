@@ -61,5 +61,5 @@ final class Sequence
     {
         self::$mutex = $mutex;
     }
-    private function __clone(): void {}
+    private function __clone() {}
 }

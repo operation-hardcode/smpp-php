@@ -11,7 +11,7 @@ use OperationHardcode\Smpp\Protocol\PDU;
 interface AfterPduConsumedExtension
 {
     /**
-     * @psalm-return Amp\Promise<void>
+     * @psalm-return Amp\Promise
      */
     public function afterPduConsumed(PDU $pdu, SmppExecutor $smppExecutor): Amp\Promise;
 }

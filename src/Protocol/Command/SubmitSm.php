@@ -13,9 +13,6 @@ use OperationHardcode\Smpp\Protocol\NPI;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Protocol\TON;
 
-/**
- * @psalm-immutable
- */
 final class SubmitSm extends PDU implements Replyable
 {
     public function __construct(
