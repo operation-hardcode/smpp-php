@@ -21,7 +21,7 @@ interface Connection
     public function isConnected(): bool;
 
     /**
-     * @param callable(): Amp\Promise<void> $invoke
+     * @param callable(): (Amp\Promise|void) $invoke
      */
     public function onClose(callable $invoke): void;
 }

@@ -100,7 +100,7 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Success<int>|Amp\Failure<\Throwable>
+     * @psalm-return Amp\Success<int>
      */
     public function produce(PDU $packet): Amp\Promise
     {
@@ -125,11 +125,11 @@ final class SmppExecutor
 
             $packet = $packet->withSequence($sequence);
 
+            yield $connection->write($packet);
+
             foreach ($this->afterPduProducedExtensions as $extension) {
                 yield $extension->afterPduProduced($packet, $this);
             }
-
-            yield $connection->write($packet);
 
             return $sequence;
         });
@@ -178,11 +178,11 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Success<Connection>|Amp\Failure<\Throwable>
+     * @psalm-return Amp\Success<Connection>
      */
     private function reconnect(): Amp\Promise
     {
-        /** @psalm-var Amp\Success<Connection>|Amp\Failure<\Throwable> */
+        /** @psalm-var Amp\Success<Connection> */
         return Amp\call(function (): \Generator {
             yield $this->fin();
 
@@ -191,18 +191,18 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Success<Connection>|Amp\Failure<\Throwable>
+     * @psalm-return Amp\Success<Connection>
      */
     private function doConnect(): Amp\Promise
     {
-        /** @psalm-var Amp\Success<Connection>|Amp\Failure<\Throwable> */
+        /** @psalm-var Amp\Success<Connection> */
         return Amp\call(function (): \Generator {
             try {
                 $this->connection = yield Amp\call($this->establisher, $this->context);
             } catch (\Throwable $e) {
                 $this->logger->error($e->getMessage(), ['exception' => $e]);
 
-                throw new ConnectionWasNotEstablished($e->getMessage(), $e->getCode(), $e);
+                throw new ConnectionWasNotEstablished(message: $e->getMessage(), previous: $e);
             }
 
             foreach ($this->afterConnectionEstablishedExtensions as $extension) {

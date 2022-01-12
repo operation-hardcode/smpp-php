@@ -51,6 +51,8 @@ It is recommended to install the [phpinnacle/ext-buffer](https://github.com/phpi
 
 ### Receiver
 
+-------
+
 ```php
 <?php
 
@@ -83,6 +85,8 @@ Amp\Loop::run(function (): \Generator {
 
 ### Transmitter
 
+-------
+
 ```php
 <?php
 
@@ -105,6 +109,8 @@ Amp\Loop::run(function (): \Generator {
 ```
 
 ### Transceiver
+
+-------
 
 ```php
 <?php
@@ -159,6 +165,8 @@ Amp\Loop::run(function (): \Generator {
 
 ### Signals
 
+-------
+
 ```php
 <?php
 
@@ -205,6 +213,8 @@ Amp\Loop::run(function (): \Generator {
 ```
 
 ### Extensions
+
+-------
 
 If you need more options when working with library, you can write an extension. The library provides 4 hooks that are called by the executor at different times of their work:
 
@@ -313,6 +323,8 @@ Amp\Loop::run(function (): \Generator {
 
 ### Heartbeat
 
+-------
+
 The library provides the `Heartbeat` extension which periodically send the `ENQUIRE_LINK` command, required by SMPP specification.
 You can configure the interval and timeout within which you must receive a `ENQUIRE_LINK_RESP` with command status `ESME_ROK`.
 
@@ -340,8 +352,8 @@ Amp\Loop::run(function (): \Generator {
         )
         ->withExtensions([
             new Heartbeat(
-                Time::fromSeconds(10),
-                Time::fromSeconds(2),
+                Time::fromSeconds(10), // interval
+                Time::fromSeconds(2), // timeout
                 $logger,
             ),
         ]);

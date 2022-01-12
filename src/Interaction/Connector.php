@@ -46,6 +46,7 @@ final class Connector
     public function asTransceiver(ConnectionContext $context, LoggerInterface $logger = new NullLogger()): SmppExecutor
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
+            /** @var Amp\Promise<Connection> */
             return Amp\call(function () use ($context, $logger): \Generator {
                 $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
@@ -59,7 +60,7 @@ final class Connector
 
                     $logger->debug('Connected as transceiver...');
 
-                    return new Amp\Success($connection);
+                    return $connection;
                 } catch (\Throwable $e) {
                     $logger->error('Disconnection from "{uri}" with error "{error}".', [
                         'uri' => $context->uri,
@@ -78,6 +79,7 @@ final class Connector
     public function asReceiver(ConnectionContext $context, LoggerInterface $logger = new NullLogger()): SmppExecutor
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
+            /** @var Amp\Promise<Connection> */
             return Amp\call(function () use ($context, $logger): \Generator {
                 $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
@@ -91,7 +93,7 @@ final class Connector
 
                     $logger->debug('Connected as receiver...');
 
-                    return new Amp\Success($connection);
+                    return $connection;
                 } catch (\Throwable $e) {
                     $logger->error('Disconnection from "{uri}" with error "{error}".', [
                         'uri' => $context->uri,
@@ -111,6 +113,7 @@ final class Connector
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
             return Amp\call(function () use ($context, $logger): \Generator {
+                /** @var Amp\Promise<Connection> */
                 $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
                 yield $connection->write(
@@ -123,7 +126,7 @@ final class Connector
 
                     $logger->debug('Connected as transmitter...');
 
-                    return new Amp\Success($connection);
+                    return $connection;
                 } catch (\Throwable $e) {
                     $logger->error('Disconnection from "{uri}" with error "{error}".', [
                         'uri' => $context->uri,

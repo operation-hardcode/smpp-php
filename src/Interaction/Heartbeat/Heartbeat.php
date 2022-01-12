@@ -24,7 +24,7 @@ final class Heartbeat implements
     private ?string $id = null;
 
     /**
-     * @var array<int, ?EnquireLinkResp>
+     * @var array<int, EnquireLinkResp|null>
      */
     private array $heartbeats = [];
 
