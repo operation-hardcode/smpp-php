@@ -51,22 +51,21 @@ final class Heartbeat implements
 
                 $this->heartbeats[$sequence] = null;
 
-                Amp\Loop::delay($this->timeout->duration, function (string $watcherId) use ($sequence, $smppExecutor): \Generator {
-                    if ($this->heartbeats[$sequence]?->status !== CommandStatus::ESME_ROK) {
-                        $this->logger->debug('Response for heartbeat with id "{id}" was not received.', [
-                            'id' => $sequence,
-                        ]);
+                Amp\Loop::unreference(
+                    Amp\Loop::delay($this->timeout->duration, function () use ($sequence, $smppExecutor): \Generator {
+                        if ($this->heartbeats[$sequence]?->status !== CommandStatus::ESME_ROK) {
+                            $this->logger->error('Response for heartbeat with id "{id}" was not received.', [
+                                'id' => $sequence,
+                            ]);
 
-                        Amp\Loop::cancel($watcherId);
+                            $this->cancel();
 
-                        \assert(!\is_null($this->id));
-                        Amp\Loop::cancel($this->id);
+                            yield $smppExecutor->fin(new EnquireConnectionTimeoutException());
+                        }
 
-                        yield $smppExecutor->fin();
-                    }
-
-                    unset($this->heartbeats[$sequence]);
-                });
+                        unset($this->heartbeats[$sequence]);
+                    })
+                );
             });
         });
     }
@@ -88,10 +87,17 @@ final class Heartbeat implements
      */
     public function afterConnectionClosed(?\Throwable $e = null): Amp\Promise
     {
-        if ($this->id !== null) {
-            Amp\Loop::cancel($this->id);
-        }
+        $this->cancel();
 
         return new Amp\Success();
+    }
+
+    private function cancel(): void
+    {
+        [$id, $this->id] = [$this->id, null];
+
+        if ($id !== null) {
+            Amp\Loop::cancel($id);
+        }
     }
 }

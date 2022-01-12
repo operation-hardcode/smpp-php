@@ -22,13 +22,13 @@ final class MonitorConnection implements AfterConnectionEstablishedExtension, Af
     private $onDisconnection;
 
     /**
-     * @psalm-param callable(SmppExecutor): Amp\Promise<void> $onConnection
-     * @psalm-param callable(?\Throwable): Amp\Promise<void> $onDisconnection
+     * @psalm-param (callable(SmppExecutor): Amp\Promise<void>)|null $onConnection
+     * @psalm-param (callable(?\Throwable): Amp\Promise<void>)|null $onDisconnection
      */
-    public function __construct(callable $onConnection, callable $onDisconnection)
+    public function __construct(?callable $onConnection = null, ?callable $onDisconnection = null)
     {
-        $this->onConnection = $onConnection;
-        $this->onDisconnection = $onDisconnection;
+        $this->onConnection = $onConnection ?: fn (): Amp\Promise => new Amp\Success();
+        $this->onDisconnection = $onDisconnection ?: fn (): Amp\Promise => new Amp\Success();
     }
 
     /**

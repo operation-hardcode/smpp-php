@@ -15,6 +15,7 @@ use OperationHardcode\Smpp\Sequence;
 use OperationHardcode\Smpp\Transport\Connection;
 use OperationHardcode\Smpp\Transport\ConnectionContext;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 final class SmppExecutor
 {
@@ -117,7 +118,7 @@ final class SmppExecutor
 
             $sequence = $packet->sequence();
 
-            // If it is reply, then the sequence will be non-zero.
+            // If it's reply, then the sequence will be non-zero.
             if ($sequence === 0) {
                 $sequence = yield Sequence::delegate()->next();
             }
@@ -137,11 +138,13 @@ final class SmppExecutor
     /**
      * @psalm-return Amp\Promise<void>
      */
-    public function fin(): Amp\Promise
+    public function fin(?\Throwable $e = null): Amp\Promise
     {
         /** @psalm-var Amp\Promise<void> */
-        return Amp\call(function (): \Generator {
-            $this->logger->debug('Closing connection...');
+        return Amp\call(function () use ($e): \Generator {
+            $this->logger->log($e ? LogLevel::ERROR : LogLevel::DEBUG, 'Closing connection...', [
+                'exception' => $e,
+            ]);
 
             if ($this->connection?->isConnected() === true) {
                 try {
