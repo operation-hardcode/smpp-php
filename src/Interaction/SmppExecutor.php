@@ -105,13 +105,11 @@ final class SmppExecutor
     {
         /** @psalm-var Amp\Promise<int> */
         return Amp\call(function () use ($packet): \Generator {
-            /** @var Connection $connection */
             $connection = yield $this->connect();
 
             if (Sequence::delegate()->overflow()) {
                 Sequence::delegate()->reset();
 
-                /** @var Connection $connection */
                 $connection = yield $this->reconnect();
             }
 

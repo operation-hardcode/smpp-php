@@ -24,7 +24,7 @@ final class Heartbeat implements
     private ?string $id = null;
 
     /**
-     * @var array<int, EnquireLinkResp|null>
+     * @var array<int, EnquireLinkResp>
      */
     private array $heartbeats = [];
 
@@ -42,18 +42,15 @@ final class Heartbeat implements
     {
         return Amp\call(function () use ($smppExecutor): void {
             $this->id = Amp\Loop::repeat($this->interval->duration, function () use ($smppExecutor): \Generator {
-                /** @var int $sequence */
                 $sequence = yield $smppExecutor->produce(new EnquireLink());
 
                 $this->logger->debug('Sending heartbeat with id "{id}".', [
                     'id' => $sequence,
                 ]);
 
-                $this->heartbeats[$sequence] = null;
-
                 Amp\Loop::unreference(
                     Amp\Loop::delay($this->timeout->duration, function () use ($sequence, $smppExecutor): \Generator {
-                        if ($this->heartbeats[$sequence]?->status !== CommandStatus::ESME_ROK) {
+                        if (($this->heartbeats[$sequence] ?? null)?->status !== CommandStatus::ESME_ROK) {
                             $this->logger->error('Response for heartbeat with id "{id}" was not received.', [
                                 'id' => $sequence,
                             ]);
