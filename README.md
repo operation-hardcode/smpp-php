@@ -1,5 +1,9 @@
 # Async SMPP v3.4 protocol implementation for PHP.
 
+![ci](https://github.com/operation-hardcode/smpp-php/workflows/ci/badge.svg?event=push)
+[![Codecov](https://codecov.io/gh/operation-hardcode/smpp-php/branch/master/graph/badge.svg)](https://codecov.io/gh/operation-hardcode/smpp-php)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
+c
 See the [specification](https://smpp.org/SMPP_v3_4_Issue1_2.pdf) for more information about protocol.
 
 ### Contents
