@@ -42,7 +42,6 @@ final class SmppExecutor
     private array $afterPduProducedExtensions = [];
 
     /**
-     * @param callable $establisher
      * @psalm-param callable(ConnectionContext): Amp\Promise<Connection> $establisher
      */
     public function __construct(
@@ -100,11 +99,11 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Success<int>
+     * @psalm-return Amp\Promise<int>
      */
     public function produce(PDU $packet): Amp\Promise
     {
-        /** @psalm-var Amp\Success<int>|Amp\Failure<\Throwable> */
+        /** @psalm-var Amp\Promise<int> */
         return Amp\call(function () use ($packet): \Generator {
             /** @var Connection $connection */
             $connection = yield $this->connect();
@@ -163,11 +162,11 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Success<Connection>
+     * @psalm-return Amp\Promise<Connection>
      */
     private function connect(): Amp\Promise
     {
-        /** @psalm-var Amp\Success<Connection> */
+        /** @psalm-var Amp\Promise<Connection> */
         return Amp\call(function (): \Generator {
             if ($this->connection?->isConnected() === true) {
                 return $this->connection;
@@ -178,7 +177,7 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Success<Connection>
+     * @psalm-return Amp\Promise<Connection>
      */
     private function reconnect(): Amp\Promise
     {
@@ -191,11 +190,11 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Success<Connection>
+     * @psalm-return Amp\Promise<Connection>
      */
     private function doConnect(): Amp\Promise
     {
-        /** @psalm-var Amp\Success<Connection> */
+        /** @psalm-var Amp\Promise<Connection> */
         return Amp\call(function (): \Generator {
             try {
                 $this->connection = yield Amp\call($this->establisher, $this->context);

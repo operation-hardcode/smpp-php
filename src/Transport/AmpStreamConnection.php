@@ -16,7 +16,7 @@ final class AmpStreamConnection implements Connection
 
     /**
      * @var callable
-     * @psalm-var (callable(): Amp\Promise<void>)|null
+     * @psalm-var (callable(): (Amp\Promise|void))|null
      */
     private $invokeOnDisconnect = null;
 

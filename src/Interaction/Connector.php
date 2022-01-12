@@ -112,8 +112,8 @@ final class Connector
     public function asTransmitter(ConnectionContext $context, LoggerInterface $logger = new NullLogger()): SmppExecutor
     {
         return new SmppExecutor($context, $logger, function (ConnectionContext $context) use ($logger): Amp\Promise {
+            /** @var Amp\Promise<Connection> */
             return Amp\call(function () use ($context, $logger): \Generator {
-                /** @var Amp\Promise<Connection> */
                 $connection = yield Amp\call($this->connectionFn, $context, $logger);
 
                 yield $connection->write(
