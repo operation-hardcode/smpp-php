@@ -36,7 +36,7 @@ final class DeliverSm extends PDU implements Replyable
             ->appendUint8($this->from->npi?->value ?: 0)
             ->appendString($this->from->value)
             ->appendUint8($this->to->ton?->value ?: 0)
-            ->appendUint8($this->to->npi->value ?: 0)
+            ->appendUint8($this->to->npi?->value ?: 0)
             ->appendString($this->to->value)
             ->appendUint8(
                 $this->esmeClass instanceof EsmeClass

@@ -32,7 +32,7 @@ abstract class Bind extends PDU
         $systemId = $buffer->consumeString();
         $password = $buffer->consumeString();
         $system = System::tryFrom($buffer->consumeString()) ?: System::UNKNOWN;
-        $version = Version::tryFrom($buffer->consumeUint8());
+        $version = Version::tryFrom($buffer->consumeUint8()) ?: Version::V_34;
         $ton = TON::tryFrom($buffer->consumeUint32()) ?: TON::INTERNATIONAL;
         $npi = NPI::tryFrom($buffer->consumeUint32()) ?: NPI::ISDN;
 

@@ -36,11 +36,11 @@ final class SubmitSm extends PDU implements Replyable
     {
         return Buffer::new()
             ->appendString($this->serviceType)
-            ->appendUint8($this->from?->ton->value ?: 0)
-            ->appendUint8($this->from?->npi->value ?: 0)
+            ->appendUint8($this->from->ton?->value ?: 0)
+            ->appendUint8($this->from->npi?->value ?: 0)
             ->appendString($this->from->value)
-            ->appendUint8($this->to?->ton->value ?: 0)
-            ->appendUint8($this->to?->npi->value ?: 0)
+            ->appendUint8($this->to->ton?->value ?: 0)
+            ->appendUint8($this->to->npi?->value ?: 0)
             ->appendString($this->to->value)
             ->appendUint8(
                 $this->esmeClass instanceof EsmeClass

@@ -41,6 +41,7 @@ final class SmppExecutor
     private array $afterPduProducedExtensions = [];
 
     /**
+     * @param callable $establisher
      * @psalm-param callable(ConnectionContext): Amp\Promise<Connection> $establisher
      */
     public function __construct(
@@ -86,10 +87,12 @@ final class SmppExecutor
         /** @psalm-var Amp\Success<void>|Amp\Failure<\Throwable> */
         return Amp\call(function () use ($onMessage): \Generator {
             return Consumer::new(yield $this->connect())
-                ->onEachMessage(function (PDU $packet): \Generator {
-                    foreach ($this->afterPduConsumedExtensions as $extension) {
-                        yield $extension->afterPduConsumed($packet, $this);
-                    }
+                ->onEachMessage(function (PDU $packet): Amp\Promise {
+                    return Amp\call(function () use ($packet): \Generator {
+                        foreach ($this->afterPduConsumedExtensions as $extension) {
+                            yield $extension->afterPduConsumed($packet, $this);
+                        }
+                    });
                 })
                 ->listen($onMessage, $this);
         });
@@ -157,11 +160,11 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Success<Connection>|Amp\Failure<\Throwable>
+     * @psalm-return Amp\Success<Connection>
      */
     private function connect(): Amp\Promise
     {
-        /** @psalm-var Amp\Success<Connection>|Amp\Failure<\Throwable> */
+        /** @psalm-var Amp\Success<Connection> */
         return Amp\call(function (): \Generator {
             if ($this->connection?->isConnected() === true) {
                 return $this->connection;

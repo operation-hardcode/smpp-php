@@ -63,7 +63,7 @@ final class AmpStreamConnection implements Connection
      */
     public function write(\Stringable $data): Amp\Promise
     {
-        /** @var Amp\Promise<void> */
+        /** @var Amp\Failure<\Throwable>|Amp\Success<void> */
         return $this->socket->write((string) $data);
     }
 

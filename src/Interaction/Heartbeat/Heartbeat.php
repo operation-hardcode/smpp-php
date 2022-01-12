@@ -52,7 +52,7 @@ final class Heartbeat implements
                 $this->heartbeats[$sequence] = null;
 
                 Amp\Loop::delay($this->timeout->duration, function (string $watcherId) use ($sequence, $smppExecutor): \Generator {
-                    if ($this->heartbeats[$sequence] === null || $this->heartbeats[$sequence]->status !== CommandStatus::ESME_ROK) {
+                    if ($this->heartbeats[$sequence]?->status !== CommandStatus::ESME_ROK) {
                         $this->logger->debug('Response for heartbeat with id "{id}" was not received.', [
                             'id' => $sequence,
                         ]);
