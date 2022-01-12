@@ -23,7 +23,7 @@ final class SubmitSm extends PDU implements Replyable
         public readonly Destination $to,
         public readonly string $message,
         public readonly string $serviceType = '',
-        public readonly EsmeClass $esmeClass = EsmeClass::STORE_AND_FORWARD,
+        public readonly EsmeClass|int $esmeClass = EsmeClass::STORE_AND_FORWARD,
         public readonly int $protocolId = 0x00,
         public readonly int $priority = 0x00,
         public readonly ?string $scheduleDeliveryTime = null,
@@ -45,7 +45,11 @@ final class SubmitSm extends PDU implements Replyable
             ->appendUint8($this->to?->ton->value ?: 0)
             ->appendUint8($this->to?->npi->value ?: 0)
             ->appendString($this->to->value)
-            ->appendUint8($this->esmeClass->value)
+            ->appendUint8(
+                $this->esmeClass instanceof EsmeClass
+                    ? $this->esmeClass->value
+                    : $this->esmeClass
+            )
             ->appendUint8($this->protocolId)
             ->appendUint8($this->priority)
             ->appendString($this->scheduleDeliveryTime)
@@ -68,7 +72,7 @@ final class SubmitSm extends PDU implements Replyable
         $destinationAddrTon = TON::try($buffer->consumeUint8());
         $destinationAddrNpi = NPI::try($buffer->consumeUint8());
         $destinationAddress = $buffer->consumeString();
-        $esmeClass = EsmeClass::tryFrom($buffer->consumeUint8()) ?: EsmeClass::UNKNOWN;
+        $esmeClass = EsmeClass::tryFrom($bits = $buffer->consumeUint8()) ?: $bits;
         $protocolId = $buffer->consumeUint8();
         $priorityFlag = $buffer->consumeUint8();
         $scheduleDeliveryTime = $buffer->consumeString();

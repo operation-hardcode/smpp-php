@@ -7,11 +7,8 @@ namespace OperationHardcode\Smpp\Interaction;
 use Amp;
 use OperationHardcode\Smpp\Protocol\CannotParseFrame;
 use OperationHardcode\Smpp\Protocol\Command\EnquireLink;
-use OperationHardcode\Smpp\Protocol\Command\EnquireLinkResp;
 use OperationHardcode\Smpp\Protocol\Command\GenericNack;
 use OperationHardcode\Smpp\Protocol\Command\Unbind;
-use OperationHardcode\Smpp\Protocol\Command\UnbindResp;
-use OperationHardcode\Smpp\Protocol\CommandStatus;
 use OperationHardcode\Smpp\Protocol\FrameParser;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Transport\Connection;
@@ -51,7 +48,13 @@ final class Consumer
     public function listen(callable $onMessage, SmppExecutor $executor): Amp\Promise
     {
         return Amp\call(function () use ($onMessage, $executor): \Generator {
-            while ($this->connection->isConnected()) {
+            $running = true;
+
+            $this->connection->onClose(function () use (&$running): void {
+                $running = false;
+            });
+
+            while ($running && $this->connection->isConnected()) {
                 if (null !== ($bytes = yield $this->connection->read())) {
                     try {
                         if (FrameParser::hasFrame($bytes)) {
@@ -63,9 +66,9 @@ final class Consumer
                             }
 
                             Amp\asyncCall(match (get_class($pdu)) {
-                                EnquireLink::class => fn (): Amp\Promise => $this->connection->write((new EnquireLinkResp())->withSequence($pdu->sequence())),
-                                Unbind::class => function () use ($executor): \Generator {
-                                    yield $this->connection->write(new UnbindResp(CommandStatus::ESME_ROK));
+                                EnquireLink::class => fn (): Amp\Promise => $executor->produce($pdu->reply()),
+                                Unbind::class => function () use ($executor, $pdu): \Generator {
+                                    yield $executor->produce($pdu->reply());
 
                                     return $executor->fin();
                                 },

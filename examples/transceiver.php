@@ -13,6 +13,8 @@ use Monolog\Processor\ProcessorInterface;
 use Monolog\Processor\PsrLogMessageProcessor;
 use OperationHardcode\Smpp;
 use OperationHardcode\Smpp\Interaction\Connector;
+use OperationHardcode\Smpp\Interaction\Heartbeat\Heartbeat;
+use OperationHardcode\Smpp\Interaction\SmppExecutor;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Transport\ConnectionContext;
 use Psr\Log\LoggerInterface;
@@ -29,16 +31,38 @@ function stdoutLogger(string $loggerName, array $processors = []): LoggerInterfa
 }
 
 Amp\Loop::run(function (): \Generator {
-    $transceiver = Connector::connect()->asTransceiver(
-        ConnectionContext::default(uri: 'smscsim.melroselabs.com:2775', systemId: '900238', password: 'c58775'),
-        stdoutLogger('transceiver'),
+    $logger = stdoutLogger('transceiver');
+
+    $transceiver = Connector::connect()
+        ->asTransceiver(
+            ConnectionContext::default(uri: 'smscsim.melroselabs.com:2775', systemId: '900238', password: 'c58775'),
+            $logger
+        )
+        ->withExtensions([
+            new Heartbeat(
+                Smpp\Time::fromSeconds(4),
+                Smpp\Time::fromSeconds(2),
+                $logger
+            )
+        ]);
+
+    Amp\Loop::unreference(
+        Amp\Loop::onSignal(\SIGINT, function () use ($transceiver): \Generator {
+            yield $transceiver->fin();
+        })
     );
 
     try {
-        yield $transceiver->consume(function (PDU $pdu, Smpp\Interaction\SmppExecutor $executor): \Generator {
-            yield $executor->produce((new Smpp\Protocol\Command\GenericNack(Smpp\Protocol\CommandStatus::ESME_RINVDSTTON))->withSequence($pdu->sequence()));
+        yield $transceiver->consume(function (PDU $pdu, SmppExecutor $executor): \Generator {
+           if ($pdu instanceof Smpp\Protocol\Command\Replyable) {
+                $reply = $pdu->reply();
 
-            var_dump($pdu);
+                yield $executor->produce($reply);
+
+                if ($pdu instanceof Smpp\Protocol\Command\DeliverSm) {
+                    yield $executor->produce(new Smpp\Protocol\Command\SubmitSm($pdu->to, $pdu->from, 'Activate', $pdu->serviceType, 28));
+                }
+            }
 
             return new Amp\Success();
         });

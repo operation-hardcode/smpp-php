@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace OperationHardcode\Smpp\Interaction;
 
 use Amp;
-use OperationHardcode\Smpp\Protocol\Command\EnquireLink;
-use OperationHardcode\Smpp\Protocol\Command\EnquireLinkResp;
+use OperationHardcode\Smpp\Interaction\Extensions\AfterConnectionClosedExtension;
+use OperationHardcode\Smpp\Interaction\Extensions\AfterConnectionEstablishedExtension;
+use OperationHardcode\Smpp\Interaction\Extensions\AfterPduConsumedExtension;
+use OperationHardcode\Smpp\Interaction\Extensions\AfterPduProducedExtension;
 use OperationHardcode\Smpp\Protocol\Command\Unbind;
-use OperationHardcode\Smpp\Protocol\CommandStatus;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Sequence;
 use OperationHardcode\Smpp\Transport\Connection;
@@ -17,21 +18,27 @@ use Psr\Log\LoggerInterface;
 
 final class SmppExecutor
 {
-    /**
-     * @psalm-var (callable(SmppExecutor): (void|Amp\Promise<void>))[]
-     */
-    private array $onConnectCallbacks = [];
-
-    /**
-     * @psalm-var (callable(SmppExecutor): (void|Amp\Promise<void>))[]
-     */
-    private array $onShutdownCallbacks = [];
     private ?Connection $connection = null;
 
     /**
-     * @var array<int, EnquireLinkResp|null>
+     * @var AfterConnectionEstablishedExtension[]
      */
-    private array $heartbeats = [];
+    private array $afterConnectionEstablishedExtensions = [];
+
+    /**
+     * @var AfterConnectionClosedExtension[]
+     */
+    private array $afterConnectionClosedExtensions = [];
+
+    /**
+     * @var AfterPduConsumedExtension[]
+     */
+    private array $afterPduConsumedExtensions = [];
+
+    /**
+     * @var AfterPduProducedExtension[]
+     */
+    private array $afterPduProducedExtensions = [];
 
     /**
      * @psalm-param callable(ConnectionContext): Amp\Promise<Connection> $establisher
@@ -44,21 +51,27 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-param callable(SmppExecutor): (void|Amp\Promise<void>) $fn
+     * @psalm-param iterable<AfterConnectionEstablishedExtension|AfterConnectionClosedExtension|AfterPduConsumedExtension|AfterPduProducedExtension> $extensions
      */
-    public function onConnect(callable $fn): SmppExecutor
+    public function withExtensions(iterable $extensions): SmppExecutor
     {
-        $this->onConnectCallbacks[] = $fn;
+        foreach ($extensions as $extension) {
+            if ($extension instanceof AfterConnectionEstablishedExtension) {
+                $this->afterConnectionEstablishedExtensions[] = $extension;
+            }
 
-        return $this;
-    }
+            if ($extension instanceof AfterConnectionClosedExtension) {
+                $this->afterConnectionClosedExtensions[] = $extension;
+            }
 
-    /**
-     * @psalm-param callable(SmppExecutor): (void|Amp\Promise<void>) $fn
-     */
-    public function onShutdown(callable $fn): SmppExecutor
-    {
-        $this->onShutdownCallbacks[] = $fn;
+            if ($extension instanceof AfterPduConsumedExtension) {
+                $this->afterPduConsumedExtensions[] = $extension;
+            }
+
+            if ($extension instanceof AfterPduProducedExtension) {
+                $this->afterPduProducedExtensions[] = $extension;
+            }
+        }
 
         return $this;
     }
@@ -70,11 +83,12 @@ final class SmppExecutor
      */
     public function consume(callable $onMessage): Amp\Promise
     {
+        /** @psalm-var Amp\Success<void>|Amp\Failure<\Throwable> */
         return Amp\call(function () use ($onMessage): \Generator {
             return Consumer::new(yield $this->connect())
-                ->onEachMessage(function (PDU $pdu): void {
-                    if ($pdu instanceof EnquireLinkResp) {
-                        $this->heartbeats[$pdu->sequence()] = $pdu;
+                ->onEachMessage(function (PDU $packet): \Generator {
+                    foreach ($this->afterPduConsumedExtensions as $extension) {
+                        yield $extension->afterPduConsumed($packet, $this);
                     }
                 })
                 ->listen($onMessage, $this);
@@ -82,10 +96,11 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Success<void>|Amp\Failure<\Throwable>
+     * @psalm-return Amp\Success<int>|Amp\Failure<\Throwable>
      */
     public function produce(PDU $packet): Amp\Promise
     {
+        /** @psalm-var Amp\Success<int>|Amp\Failure<\Throwable> */
         return Amp\call(function () use ($packet): \Generator {
             /** @var Connection $connection */
             $connection = yield $this->connect();
@@ -97,7 +112,22 @@ final class SmppExecutor
                 $connection = yield $this->reconnect();
             }
 
+            $sequence = $packet->sequence();
+
+            // If it is reply, then the sequence will be non-zero.
+            if ($sequence === 0) {
+                $sequence = yield Sequence::delegate()->next();
+            }
+
+            $packet = $packet->withSequence($sequence);
+
+            foreach ($this->afterPduProducedExtensions as $extension) {
+                yield $extension->afterPduProduced($packet, $this);
+            }
+
             yield $connection->write($packet);
+
+            return $sequence;
         });
     }
 
@@ -106,16 +136,17 @@ final class SmppExecutor
      */
     public function fin(): Amp\Promise
     {
+        /** @psalm-var Amp\Promise<void> */
         return Amp\call(function (): \Generator {
             $this->logger->debug('Closing connection...');
 
-            foreach ($this->onShutdownCallbacks as $fn) {
-                Amp\asyncCall($fn, $this);
+            foreach ($this->afterConnectionClosedExtensions as $extension) {
+                yield $extension->afterConnectionClosed($this);
             }
 
             if ($this->connection?->isConnected() === true) {
                 try {
-                    yield $this->produce((new Unbind())->withSequence(yield Sequence::delegate()->next()));
+                    yield $this->produce(new Unbind());
 
                     $this->connection->close();
                 } catch (\Throwable $e) {
@@ -130,6 +161,7 @@ final class SmppExecutor
      */
     private function connect(): Amp\Promise
     {
+        /** @psalm-var Amp\Success<Connection>|Amp\Failure<\Throwable> */
         return Amp\call(function (): \Generator {
             if ($this->connection?->isConnected() === true) {
                 return $this->connection;
@@ -144,6 +176,7 @@ final class SmppExecutor
      */
     private function reconnect(): Amp\Promise
     {
+        /** @psalm-var Amp\Success<Connection>|Amp\Failure<\Throwable> */
         return Amp\call(function (): \Generator {
             yield $this->fin();
 
@@ -156,6 +189,7 @@ final class SmppExecutor
      */
     private function doConnect(): Amp\Promise
     {
+        /** @psalm-var Amp\Success<Connection>|Amp\Failure<\Throwable> */
         return Amp\call(function (): \Generator {
             try {
                 $this->connection = yield Amp\call($this->establisher, $this->context);
@@ -165,46 +199,11 @@ final class SmppExecutor
                 throw new ConnectionWasNotEstablished($e->getMessage(), $e->getCode(), $e);
             }
 
-            foreach ($this->onConnectCallbacks as $fn) {
-                Amp\asyncCall($fn, $this);
+            foreach ($this->afterConnectionEstablishedExtensions as $extension) {
+                yield $extension->afterConnectionEstablished($this);
             }
-
-            $this->configureHeartbeat();
 
             return $this->connection;
         });
-    }
-
-    private function configureHeartbeat(): void
-    {
-        if ($this->context->heartbeatInterval !== null) {
-            Amp\Loop::unreference(
-                Amp\Loop::repeat($this->context->heartbeatInterval, function (): \Generator {
-                    $sequence = yield Sequence::delegate()->next();
-
-                    $this->logger->debug('Sending heartbeat with id "{id}".', [
-                        'id' => $sequence,
-                    ]);
-
-                    yield $this->produce((new EnquireLink())->withSequence($sequence));
-
-                    $this->heartbeats[$sequence] = null;
-
-                    Amp\Loop::delay($this->context->heartbeatTimeout, function (string $watcherId) use ($sequence): \Generator {
-                        if ($this->heartbeats[$sequence] === null || $this->heartbeats[$sequence]->status !== CommandStatus::ESME_ROK) {
-                            $this->logger->debug('Response for heartbeat with id "{id}" was not received.', [
-                                'id' => $sequence,
-                            ]);
-
-                            Amp\Loop::cancel($watcherId);
-
-                            yield $this->fin();
-                        }
-
-                        unset($this->heartbeats[$sequence]);
-                    });
-                })
-            );
-        }
     }
 }

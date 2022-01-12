@@ -56,7 +56,7 @@ final class Connector
                 );
 
                 try {
-                    yield $this->establish($connection, Command\BindTransceiverResp::class, $context->establishTimeout);
+                    yield $this->establish($connection, Command\BindTransceiverResp::class, $context->establishTimeout->duration);
 
                     $logger->debug('Connected as transceiver...');
 
@@ -89,7 +89,7 @@ final class Connector
                 );
 
                 try {
-                    yield $this->establish($connection, Command\BindReceiverResp::class, $context->establishTimeout);
+                    yield $this->establish($connection, Command\BindReceiverResp::class, $context->establishTimeout->duration);
 
                     $logger->debug('Connected as receiver...');
 
@@ -122,7 +122,7 @@ final class Connector
                 );
 
                 try {
-                    yield $this->establish($connection, Command\BindTransmitterResp::class, $context->establishTimeout);
+                    yield $this->establish($connection, Command\BindTransmitterResp::class, $context->establishTimeout->duration);
 
                     $logger->debug('Connected as transmitter...');
 

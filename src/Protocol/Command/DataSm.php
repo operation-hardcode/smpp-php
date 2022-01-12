@@ -19,7 +19,7 @@ final class DataSm extends PDU
         public readonly string $serviceType,
         public readonly Destination $source,
         public readonly Destination $destination,
-        public readonly EsmeClass $esmeClass = EsmeClass::STORE_AND_FORWARD,
+        public readonly EsmeClass|int $esmeClass = EsmeClass::STORE_AND_FORWARD,
         public readonly int $registeredDelivery = 0,
         public readonly int $dataCoding = 0,
     ) {
@@ -34,7 +34,7 @@ final class DataSm extends PDU
         $destinationAddrTon = TON::try($buffer->consumeUint8(), TON::UNKNOWN);
         $destinationAddrNpi = NPI::try($buffer->consumeUint8(), NPI::UNKNOWN);
         $destinationAddr = $buffer->consumeString();
-        $esmeClass = EsmeClass::tryFrom($buffer->consumeUint8()) ?: EsmeClass::UNKNOWN;
+        $esmeClass = EsmeClass::tryFrom($bits = $buffer->consumeUint8()) ?: $bits;
         $registeredDelivery = $buffer->consumeUint8();
         $dataCoding = $buffer->consumeUint8();
 
@@ -58,7 +58,11 @@ final class DataSm extends PDU
             ->appendUint8($this->destination->ton?->value ?: 0)
             ->appendUint8($this->destination->npi?->value ?: 0)
             ->appendString($this->destination->value)
-            ->appendUint8($this->esmeClass->value)
+            ->appendUint8(
+                $this->esmeClass instanceof EsmeClass
+                    ? $this->esmeClass->value
+                    : $this->esmeClass
+            )
             ->appendUint8($this->registeredDelivery)
             ->appendUint8($this->dataCoding)
             ->toBytes($this->sequence(), Command::DATA_SM);

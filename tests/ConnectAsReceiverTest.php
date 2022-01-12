@@ -17,6 +17,7 @@ use OperationHardcode\Smpp\Protocol\EsmeClass;
 use OperationHardcode\Smpp\Protocol\NPI;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Protocol\TON;
+use OperationHardcode\Smpp\Tests\Tools\MonitorConnection;
 use OperationHardcode\Smpp\Transport\ConnectionContext;
 use Psr\Log\NullLogger;
 
@@ -37,16 +38,17 @@ final class ConnectAsReceiverTest extends SmppTestCase
 
             $executor = $connector
                 ->asReceiver(ConnectionContext::default('tcp://test:2225', '3333', 'secret'), new NullLogger())
-                ->onConnect(function (SmppExecutor $executor) use (&$connected): Amp\Promise {
-                    $connected = true;
+                ->withExtensions([
+                    new MonitorConnection(function (SmppExecutor $executor) use (&$connected): Amp\Promise {
+                        $connected = true;
 
-                    return Amp\call(function () use ($executor): \Generator {
-                        yield $executor->fin();
-                    });
-                })
-                ->onShutdown(function () use (&$disconnected): void {
-                    $disconnected = true;
-                })
+                        return Amp\call(function () use ($executor): \Generator {
+                            yield $executor->fin();
+                        });
+                    }, function () use (&$disconnected): void {
+                        $disconnected = true;
+                    }),
+                ])
             ;
 
             yield $executor->consume(function (PDU $pdu, SmppExecutor $executor): void {

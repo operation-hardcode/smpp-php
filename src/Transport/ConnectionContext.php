@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OperationHardcode\Smpp\Transport;
 
 use Amp\Socket\ClientTlsContext;
+use OperationHardcode\Smpp\Time;
 
 final class ConnectionContext
 {
@@ -32,19 +33,9 @@ final class ConnectionContext
     public readonly ClientTlsContext $clientTlsContext;
 
     /**
-     * Period in which producer should send the enquire link command (in milliseconds).
-     */
-    public readonly ?int $heartbeatInterval;
-
-    /**
-     * Timeout during which we are waiting for a successful connection confirmation (in milliseconds).
-     */
-    public readonly int $heartbeatTimeout;
-
-    /**
      * Timeout within which the SMSC must return current connection mode response: bind receiver, bind transmitter or bind transceiver response (in milliseconds).
      */
-    public readonly int $establishTimeout;
+    public readonly Time $establishTimeout;
 
     public function __construct(
         string $systemId,
@@ -54,9 +45,7 @@ final class ConnectionContext
         int $attempts,
         bool $noDelay,
         ClientTlsContext $clientTlsContext,
-        int $establishTimeout = 10000,
-        ?int $heartbeatInterval = null,
-        int $heartbeatTimeout = 20000
+        Time $establishTimeout,
     ) {
         $this->systemId = $systemId;
         $this->password = $password;
@@ -66,12 +55,14 @@ final class ConnectionContext
         $this->noDelay = $noDelay;
         $this->clientTlsContext = $clientTlsContext;
         $this->establishTimeout = $establishTimeout;
-        $this->heartbeatInterval = $heartbeatInterval;
-        $this->heartbeatTimeout = $heartbeatTimeout;
     }
 
-    public static function default(string $uri, string $systemId, string $password, int $establishTimeout = 10000, ?int $heartbeatInterval = null, int $heartbeatTimeout = 20000): ConnectionContext
+    public static function default(string $uri, string $systemId, string $password, Time|int $establishTimeout = 10000): ConnectionContext
     {
+        if (\is_int($establishTimeout)) {
+            $establishTimeout = Time::fromMilliseconds($establishTimeout);
+        }
+
         return new ConnectionContext(
             $systemId,
             $password,
@@ -81,8 +72,6 @@ final class ConnectionContext
             false,
             (new ClientTlsContext(''))->withoutPeerVerification(),
             $establishTimeout,
-            $heartbeatInterval,
-            $heartbeatTimeout,
         );
     }
 }
