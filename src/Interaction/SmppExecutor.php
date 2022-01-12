@@ -140,8 +140,6 @@ final class SmppExecutor
         return Amp\call(function (): \Generator {
             $this->logger->debug('Closing connection...');
 
-            $e = null;
-
             if ($this->connection?->isConnected() === true) {
                 try {
                     yield $this->produce(new Unbind());
@@ -153,7 +151,7 @@ final class SmppExecutor
             }
 
             foreach ($this->afterConnectionClosedExtensions as $extension) {
-                yield $extension->afterConnectionClosed($e);
+                yield $extension->afterConnectionClosed($e ?? null);
             }
         });
     }
