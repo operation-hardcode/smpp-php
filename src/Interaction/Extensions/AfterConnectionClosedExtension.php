@@ -8,8 +8,5 @@ use Amp;
 
 interface AfterConnectionClosedExtension
 {
-    /**
-     * @psalm-return Amp\Promise<void>
-     */
     public function afterConnectionClosed(?\Throwable $e = null): Amp\Promise;
 }

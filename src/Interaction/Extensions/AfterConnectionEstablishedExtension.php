@@ -9,8 +9,5 @@ use OperationHardcode\Smpp\Interaction\SmppExecutor;
 
 interface AfterConnectionEstablishedExtension
 {
-    /**
-     * @psalm-return Amp\Promise<void>
-     */
     public function afterConnectionEstablished(SmppExecutor $smppExecutor): Amp\Promise;
 }

@@ -110,7 +110,7 @@ final class CommandStatus
     public function __construct(
         public readonly int $status,
         public readonly string $description,
-        public readonly string $name = self::ESME_UNKNOWN,
+        public readonly string $name = 'ESME_UNKNOWN',
     ) {
     }
 

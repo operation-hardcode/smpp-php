@@ -10,8 +10,5 @@ use OperationHardcode\Smpp\Protocol\PDU;
 
 interface AfterPduProducedExtension
 {
-    /**
-     * @psalm-return Amp\Promise<void>
-     */
     public function afterPduProduced(PDU $pdu, SmppExecutor $smppExecutor): Amp\Promise;
 }
