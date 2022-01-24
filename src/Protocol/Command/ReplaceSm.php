@@ -64,8 +64,8 @@ final class ReplaceSm extends PDU implements Replyable
             ->toBytes($this->sequence(), Command::REPLACE_SM);
     }
 
-    public function reply(CommandStatus $status = CommandStatus::ESME_ROK): PDU
+    public function reply(?CommandStatus $status = null): PDU
     {
-        return (new ReplaceSmResp($status))->withSequence($this->sequence());
+        return (new ReplaceSmResp($status ?: CommandStatus::ESME_ROK()))->withSequence($this->sequence());
     }
 }

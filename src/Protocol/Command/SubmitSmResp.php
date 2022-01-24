@@ -11,7 +11,7 @@ use OperationHardcode\Smpp\Protocol\PDU;
 
 final class SubmitSmResp extends PDU
 {
-    public function __construct(public readonly CommandStatus $status = CommandStatus::ESME_ROK)
+    public function __construct(public readonly CommandStatus $status)
     {
     }
 

@@ -86,7 +86,7 @@ final class SmppExecutor
     {
         /** @psalm-var Amp\Success<void>|Amp\Failure<\Throwable> */
         return Amp\call(function () use ($onMessage): \Generator {
-            return Consumer::new(yield $this->connect())
+            Consumer::new(yield $this->connect())
                 ->onEachMessage(function (PDU $packet): Amp\Promise {
                     return Amp\call(function () use ($packet): \Generator {
                         foreach ($this->afterPduConsumedExtensions as $extension) {
@@ -109,8 +109,6 @@ final class SmppExecutor
 
             if (Sequence::delegate()->overflow()) {
                 Sequence::delegate()->reset();
-
-                $connection = yield $this->reconnect();
             }
 
             $sequence = $packet->sequence();

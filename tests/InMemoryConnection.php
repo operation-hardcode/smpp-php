@@ -13,12 +13,6 @@ final class InMemoryConnection implements Connection
     private \SplQueue $bytes;
     public array $written = [];
 
-    /**
-     * @var callable
-     * @psalm-var (callable(): Amp\Promise<void>)|null
-     */
-    private $invokeOnDisconnect;
-
     public function __construct(\SplQueue $bytes)
     {
         $this->isConnected = true;
@@ -49,19 +43,7 @@ final class InMemoryConnection implements Connection
 
     public function close(): void
     {
-        if ($this->invokeOnDisconnect !== null) {
-            Amp\asyncCall($this->invokeOnDisconnect);
-        }
-
         $this->isConnected = false;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function onClose(callable $invoke): void
-    {
-        $this->invokeOnDisconnect = $invoke;
     }
 
     public function isConnected(): bool

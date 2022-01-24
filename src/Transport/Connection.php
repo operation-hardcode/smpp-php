@@ -19,9 +19,4 @@ interface Connection
     public function read(): Amp\Promise;
     public function close(): void;
     public function isConnected(): bool;
-
-    /**
-     * @param callable(): (Amp\Promise|void) $invoke
-     */
-    public function onClose(callable $invoke): void;
 }

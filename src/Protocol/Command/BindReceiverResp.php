@@ -13,7 +13,7 @@ final class BindReceiverResp extends PDU
 {
     public function __construct(
         public readonly string $systemId,
-        public readonly CommandStatus $commandStatus = CommandStatus::ESME_ROK,
+        public readonly CommandStatus $commandStatus,
     ) {
     }
 

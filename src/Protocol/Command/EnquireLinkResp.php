@@ -12,7 +12,7 @@ use OperationHardcode\Smpp\Protocol\PDU;
 final class EnquireLinkResp extends PDU
 {
     public function __construct(
-        public readonly CommandStatus $status = CommandStatus::ESME_ROK,
+        public readonly CommandStatus $status,
     ) {
     }
 

@@ -49,7 +49,7 @@ final class BindReceiverTest extends TestCase
         self::assertInstanceOf(BindReceiverResp::class, $reply);
         self::assertEquals(4, $reply->sequence());
         self::assertEquals('209202', $reply->systemId);
-        self::assertEquals(CommandStatus::ESME_ROK, $reply->commandStatus);
+        self::assertEquals(CommandStatus::ESME_ROK(), $reply->commandStatus);
 
         $bytes = (string) $reply;
 
@@ -57,12 +57,12 @@ final class BindReceiverTest extends TestCase
         self::assertInstanceOf(BindReceiverResp::class, $responseFrame);
         self::assertEquals(4, $responseFrame->sequence());
         self::assertEquals('209202', $responseFrame->systemId);
-        self::assertEquals(CommandStatus::ESME_ROK, $responseFrame->commandStatus);
+        self::assertEquals(CommandStatus::ESME_ROK(), $responseFrame->commandStatus);
 
-        $failedReply = $frame->reply(CommandStatus::ESME_RBINDFAIL);
+        $failedReply = $frame->reply(CommandStatus::ESME_RBINDFAIL());
         self::assertInstanceOf(BindReceiverResp::class, $failedReply);
         self::assertEquals(4, $failedReply->sequence());
         self::assertEquals('209202', $failedReply->systemId);
-        self::assertEquals(CommandStatus::ESME_RBINDFAIL, $failedReply->commandStatus);
+        self::assertEquals(CommandStatus::ESME_RBINDFAIL(), $failedReply->commandStatus);
     }
 }

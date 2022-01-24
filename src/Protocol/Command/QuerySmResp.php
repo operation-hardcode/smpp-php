@@ -15,8 +15,8 @@ final class QuerySmResp extends PDU
         public readonly string $messageId,
         public readonly int $messageState,
         public readonly int $errorCode,
+        public readonly CommandStatus $status,
         public readonly string|null $finalDate = null,
-        public readonly CommandStatus $status = CommandStatus::ESME_ROK,
     ) {
     }
 
@@ -27,7 +27,7 @@ final class QuerySmResp extends PDU
         $errorCode = $buffer->consumeUint8();
         $finalDate = $buffer->consumeString();
 
-        return new QuerySmResp($messageId, $state, $errorCode, $finalDate, $status);
+        return new QuerySmResp($messageId, $state, $errorCode, $status, $finalDate);
     }
 
     public function __toString(): string

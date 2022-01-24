@@ -17,7 +17,7 @@ final class FrameParserTest extends TestCase
             FrameParser::parse('');
             self::fail('Frame was parsed.');
         } catch (CannotParseFrame $e) {
-            self::assertEquals(CommandStatus::ESME_RINVMSGLEN, $e->status);
+            self::assertEquals(CommandStatus::ESME_RINVMSGLEN()->status, $e->status->status);
             self::assertEquals(0, $e->sequence);
         }
     }
@@ -28,7 +28,7 @@ final class FrameParserTest extends TestCase
             FrameParser::parse(pack('NNNN', 16, -1, 0, 2));
             self::fail('Frame was parsed.');
         } catch (CannotParseFrame $e) {
-            self::assertEquals(CommandStatus::ESME_RINVCMDID, $e->status);
+            self::assertEquals(CommandStatus::ESME_RINVCMDID()->status, $e->status->status);
             self::assertEquals(2, $e->sequence);
         }
     }

@@ -7,6 +7,7 @@ namespace OperationHardcode\Smpp\Protocol\Command;
 use OperationHardcode\Smpp\Buffer;
 use OperationHardcode\Smpp\Protocol\Command;
 use OperationHardcode\Smpp\Protocol\CommandStatus;
+use OperationHardcode\Smpp\Protocol\DataCoding;
 use OperationHardcode\Smpp\Protocol\Destination;
 use OperationHardcode\Smpp\Protocol\EsmeClass;
 use OperationHardcode\Smpp\Protocol\NPI;
@@ -21,7 +22,7 @@ final class DataSm extends PDU
         public readonly Destination $destination,
         public readonly EsmeClass|int $esmeClass = EsmeClass::STORE_AND_FORWARD,
         public readonly int $registeredDelivery = 0,
-        public readonly int $dataCoding = 0,
+        public readonly DataCoding $dataCoding = DataCoding::DATA_CODING_DEFAULT,
     ) {
     }
 
@@ -36,7 +37,7 @@ final class DataSm extends PDU
         $destinationAddr = $buffer->consumeString();
         $esmeClass = EsmeClass::tryFrom($bits = $buffer->consumeUint8()) ?: $bits;
         $registeredDelivery = $buffer->consumeUint8();
-        $dataCoding = $buffer->consumeUint8();
+        $dataCoding = DataCoding::tryFrom($buffer->consumeUint8()) ?: DataCoding::DATA_CODING_DEFAULT;
 
         return new DataSm(
             $serviceType,
@@ -64,7 +65,7 @@ final class DataSm extends PDU
                     : $this->esmeClass
             )
             ->appendUint8($this->registeredDelivery)
-            ->appendUint8($this->dataCoding)
+            ->appendUint8($this->dataCoding->value)
             ->toBytes($this->sequence(), Command::DATA_SM);
     }
 }

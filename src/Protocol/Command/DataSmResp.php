@@ -11,13 +11,13 @@ use OperationHardcode\Smpp\Protocol\PDU;
 
 final class DataSmResp extends PDU
 {
-    public function __construct(public readonly string $messageId, public readonly CommandStatus $status = CommandStatus::ESME_ROK)
+    public function __construct(public readonly string $messageId, public readonly CommandStatus $status)
     {
     }
 
     public static function reconstitute(CommandStatus $status, Buffer $buffer): PDU
     {
-        return new DataSmResp($buffer->consumeString());
+        return new DataSmResp($buffer->consumeString(), $status);
     }
 
     public function __toString(): string

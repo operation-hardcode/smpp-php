@@ -24,6 +24,6 @@ final class UnbindTest extends TestCase
         $reply = $frame->reply();
         self::assertInstanceOf(UnbindResp::class, $reply);
         self::assertEquals(200, $reply->sequence());
-        self::assertEquals(CommandStatus::ESME_ROK, $reply->status);
+        self::assertEquals(CommandStatus::ESME_ROK(), $reply->status);
     }
 }

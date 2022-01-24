@@ -159,7 +159,7 @@ final class Connector
                     $frame = FrameParser::parse($bytes);
 
                     if ($frame instanceof $waitableResponse) {
-                        if ($frame->commandStatus === CommandStatus::ESME_ROK) {
+                        if ($frame->commandStatus->is(CommandStatus::ESME_ROK())) {
                             return new Amp\Success();
                         }
 

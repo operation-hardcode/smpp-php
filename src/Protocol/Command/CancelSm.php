@@ -55,8 +55,8 @@ final class CancelSm extends PDU implements Replyable
             ->toBytes($this->sequence(), Command::CANCEL_SM);
     }
 
-    public function reply(CommandStatus $status = CommandStatus::ESME_ROK): PDU
+    public function reply(?CommandStatus $status = null): PDU
     {
-        return (new CancelSmResp($status))->withSequence($this->sequence());
+        return (new CancelSmResp($status ?: CommandStatus::ESME_ROK()))->withSequence($this->sequence());
     }
 }

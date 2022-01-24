@@ -23,7 +23,7 @@ final class EnquireLinkTest extends TestCase
 
         $reply = $frame->reply();
         self::assertInstanceOf(EnquireLinkResp::class, $reply);
-        self::assertEquals(CommandStatus::ESME_ROK, $reply->status);
+        self::assertEquals(CommandStatus::ESME_ROK(), $reply->status);
         self::assertEquals(100, $reply->sequence());
     }
 }

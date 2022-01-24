@@ -28,7 +28,7 @@ final class ConnectAsTransceiverTest extends SmppTestCase
         Amp\Loop::run(function (): \Generator {
             $connector = Connector::connect(function (): Amp\Promise {
                 $bytes = new \SplQueue();
-                $bytes->enqueue((string) (new BindTransceiverResp('3333'))->withSequence(1));
+                $bytes->enqueue((string) (new BindTransceiverResp('3333', CommandStatus::ESME_ROK()))->withSequence(1));
 
                 return new Amp\Success(new InMemoryConnection($bytes));
             });
@@ -65,7 +65,7 @@ final class ConnectAsTransceiverTest extends SmppTestCase
         Amp\Loop::run(function (): \Generator {
             $connector = Connector::connect(function (): Amp\Promise {
                 $bytes = new \SplQueue();
-                $bytes->enqueue((string) (new BindTransceiverResp('3333', CommandStatus::ESME_RBINDFAIL))->withSequence(1));
+                $bytes->enqueue((string) (new BindTransceiverResp('3333', CommandStatus::ESME_RBINDFAIL()))->withSequence(1));
 
                 return new Amp\Success(new InMemoryConnection($bytes));
             });
@@ -138,7 +138,7 @@ final class ConnectAsTransceiverTest extends SmppTestCase
         Amp\Loop::run(function (): \Generator {
             $connector = Connector::connect(function (): Amp\Promise {
                 $bytes = new \SplQueue();
-                $bytes->enqueue((string) (new BindTransceiverResp('3333'))->withSequence(1));
+                $bytes->enqueue((string) (new BindTransceiverResp('3333', CommandStatus::ESME_ROK()))->withSequence(1));
                 $bytes->enqueue((string) (new DataSm('test', new Destination('0000'), new Destination('1000')))->withSequence(2));
 
                 return new Amp\Success(new InMemoryConnection($bytes));
@@ -156,14 +156,14 @@ final class ConnectAsTransceiverTest extends SmppTestCase
             self::assertInstanceOf(DataSm::class, $command);
             self::assertEquals('0000', $command->source->value);
             self::assertEquals(TON::INTERNATIONAL, $command->source->ton);
-            self::assertEquals(NPI::ISDN, $command->source->npi);
+            self::assertEquals(NPI::UNKNOWN, $command->source->npi);
             self::assertEquals('1000', $command->destination->value);
             self::assertEquals(TON::INTERNATIONAL, $command->destination->ton);
-            self::assertEquals(NPI::ISDN, $command->destination->npi);
+            self::assertEquals(NPI::UNKNOWN, $command->destination->npi);
             self::assertEquals('test', $command->serviceType);
             self::assertEquals(EsmeClass::STORE_AND_FORWARD, $command->esmeClass);
             self::assertEquals(0, $command->registeredDelivery);
-            self::assertEquals(0, $command->dataCoding);
+            self::assertEquals(0, $command->dataCoding->value);
         });
     }
 }

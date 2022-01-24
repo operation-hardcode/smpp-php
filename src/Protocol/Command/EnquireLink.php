@@ -21,8 +21,8 @@ final class EnquireLink extends PDU implements Replyable
         return new EnquireLink();
     }
 
-    public function reply(CommandStatus $status = CommandStatus::ESME_ROK): PDU
+    public function reply(?CommandStatus $status = null): PDU
     {
-        return (new EnquireLinkResp($status))->withSequence($this->sequence());
+        return (new EnquireLinkResp($status ?: CommandStatus::ESME_ROK()))->withSequence($this->sequence());
     }
 }

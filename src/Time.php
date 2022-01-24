@@ -19,7 +19,7 @@ final class Time
     public static function fromMilliseconds(int $milliseconds): Time
     {
         if ($milliseconds <= 0) {
-            throw new \RuntimeException('Time value must be greater or equal to zero.');
+            throw new \InvalidArgumentException('Time value must be greater or equal to zero.');
         }
 
         return new Time($milliseconds);
@@ -28,7 +28,7 @@ final class Time
     public static function fromSeconds(int $seconds): Time
     {
         if ($seconds <= 0) {
-            throw new \RuntimeException('Time value must be greater or equal to zero.');
+            throw new \InvalidArgumentException('Time value must be greater or equal to zero.');
         }
 
         return new Time($seconds * 1000);

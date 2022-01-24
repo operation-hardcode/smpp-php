@@ -12,8 +12,9 @@ final class BindReceiver extends Bind implements Replyable
 {
     protected static Command $command = Command::BIND_RECEIVER;
 
-    public function reply(CommandStatus $status = CommandStatus::ESME_ROK): PDU
+    public function reply(?CommandStatus $status = null): PDU
     {
-        return (new BindReceiverResp($this->systemId, $status))->withSequence($this->sequence());
+        return (new BindReceiverResp($this->systemId, $status ?: CommandStatus::ESME_ROK()))
+            ->withSequence($this->sequence());
     }
 }

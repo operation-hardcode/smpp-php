@@ -9,5 +9,5 @@ use OperationHardcode\Smpp\Protocol\PDU;
 
 interface Replyable
 {
-    public function reply(CommandStatus $status = CommandStatus::ESME_ROK): PDU;
+    public function reply(?CommandStatus $status = null): PDU;
 }

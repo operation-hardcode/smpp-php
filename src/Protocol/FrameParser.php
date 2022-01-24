@@ -21,7 +21,7 @@ final class FrameParser
     {
         if (strlen($bytes) < self::HEADER_LEN) {
             throw CannotParseFrame::withCommandStatus(
-                CommandStatus::ESME_RINVMSGLEN
+                CommandStatus::ESME_RINVMSGLEN()
             );
         }
 
@@ -30,7 +30,7 @@ final class FrameParser
 
         if (false === $headers) {
             throw CannotParseFrame::withCommandStatus(
-                CommandStatus::ESME_RINVCMDLEN
+                CommandStatus::ESME_RINVCMDLEN()
             );
         }
 
@@ -50,7 +50,7 @@ final class FrameParser
     {
         if (strlen($bytes) < self::HEADER_LEN) {
             throw CannotParseFrame::withCommandStatus(
-                CommandStatus::ESME_RINVMSGLEN
+                CommandStatus::ESME_RINVMSGLEN()
             );
         }
 
@@ -60,7 +60,7 @@ final class FrameParser
         // @codeCoverageIgnoreStart
         if (false === $headers) {
             throw CannotParseFrame::withCommandStatus(
-                CommandStatus::ESME_RINVCMDLEN
+                CommandStatus::ESME_RINVCMDLEN()
             );
 
             // @codeCoverageIgnoreEnd
@@ -72,7 +72,7 @@ final class FrameParser
 
         if (!isset($commands[$commandType])) {
             throw CannotParseFrame::withCommandStatus(
-                CommandStatus::ESME_RINVCMDID,
+                CommandStatus::ESME_RINVCMDID(),
                 $headers['sequence'] ?? 0,
             );
         }
@@ -82,7 +82,7 @@ final class FrameParser
 
         /** @var T */
         return $command::reconstitute(
-            CommandStatus::tryFrom($headers['status']) ?: CommandStatus::ESME_ROK,
+            CommandStatus::fromInt($headers['status']),
             new Buffer(substr($bytes, 16, $headers['length'])),
         )->withSequence($headers['sequence']);
     }

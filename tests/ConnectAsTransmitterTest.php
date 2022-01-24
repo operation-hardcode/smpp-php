@@ -14,6 +14,7 @@ use OperationHardcode\Smpp\Protocol\Command\SubmitSm;
 use OperationHardcode\Smpp\Protocol\CommandStatus;
 use OperationHardcode\Smpp\Protocol\Destination;
 use OperationHardcode\Smpp\Protocol\EsmeClass;
+use OperationHardcode\Smpp\Protocol\Message\Utf8Message;
 use OperationHardcode\Smpp\Protocol\NPI;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Protocol\TON;
@@ -28,7 +29,7 @@ final class ConnectAsTransmitterTest extends SmppTestCase
         Amp\Loop::run(function (): \Generator {
             $connector = Connector::connect(function (): Amp\Promise {
                 $bytes = new \SplQueue();
-                $bytes->enqueue((string) (new BindTransmitterResp('3333'))->withSequence(1));
+                $bytes->enqueue((string) (new BindTransmitterResp('3333', CommandStatus::ESME_ROK()))->withSequence(1));
 
                 return new Amp\Success(new InMemoryConnection($bytes));
             });
@@ -65,7 +66,7 @@ final class ConnectAsTransmitterTest extends SmppTestCase
         Amp\Loop::run(function (): \Generator {
             $connector = Connector::connect(function (): Amp\Promise {
                 $bytes = new \SplQueue();
-                $bytes->enqueue((string) (new BindTransmitterResp('3333', CommandStatus::ESME_RBINDFAIL))->withSequence(1));
+                $bytes->enqueue((string) (new BindTransmitterResp('3333', CommandStatus::ESME_RBINDFAIL()))->withSequence(1));
 
                 return new Amp\Success(new InMemoryConnection($bytes));
             });
@@ -138,8 +139,8 @@ final class ConnectAsTransmitterTest extends SmppTestCase
         Amp\Loop::run(function (): \Generator {
             $connector = Connector::connect(function (): Amp\Promise {
                 $bytes = new \SplQueue();
-                $bytes->enqueue((string) (new BindTransmitterResp('3333'))->withSequence(1));
-                $bytes->enqueue((string) (new SubmitSm(new Destination('0001'), new Destination('1000'), 'Hello from test.', 'test'))->withSequence(2));
+                $bytes->enqueue((string) (new BindTransmitterResp('3333', CommandStatus::ESME_ROK()))->withSequence(1));
+                $bytes->enqueue((string) (new SubmitSm(new Destination('0001'), new Destination('1000'), new Utf8Message('Hello from test.'), 'test'))->withSequence(2));
 
                 return new Amp\Success(new InMemoryConnection($bytes));
             });
@@ -156,17 +157,16 @@ final class ConnectAsTransmitterTest extends SmppTestCase
             self::assertInstanceOf(SubmitSm::class, $command);
             self::assertEquals('0001', $command->from->value);
             self::assertEquals(TON::INTERNATIONAL, $command->from->ton);
-            self::assertEquals(NPI::ISDN, $command->from->npi);
+            self::assertEquals(NPI::UNKNOWN, $command->from->npi);
             self::assertEquals('1000', $command->to->value);
             self::assertEquals(TON::INTERNATIONAL, $command->to->ton);
-            self::assertEquals(NPI::ISDN, $command->to->npi);
-            self::assertEquals('Hello from test.', $command->message);
+            self::assertEquals(NPI::UNKNOWN, $command->to->npi);
+            self::assertEquals('Hello from test.', $command->message->text());
             self::assertEquals('test', $command->serviceType);
             self::assertEquals(EsmeClass::STORE_AND_FORWARD, $command->esmeClass);
             self::assertEquals(0, $command->protocolId);
             self::assertEquals(0, $command->priority);
             self::assertEquals(0, $command->registeredDeliveryFlag);
-            self::assertEquals(0, $command->dataCoding);
             self::assertEmpty($command->scheduleDeliveryTime);
             self::assertEmpty($command->validityPeriod);
         });

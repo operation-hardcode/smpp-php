@@ -73,7 +73,7 @@ final class Buffer extends ByteBuffer
         $body = $this->bytes();
 
         /** @psalm-var string $headers */
-        $headers = pack('NNNN', strlen($body) + self::HEADER_SIZE, $command->value, $status?->value, $sequence);
+        $headers = pack('NNNN', strlen($body) + self::HEADER_SIZE, $command->value, $status?->status, $sequence);
 
         return $headers.$body;
     }

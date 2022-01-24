@@ -14,12 +14,6 @@ final class AmpStreamConnection implements Connection
 {
     private bool $isConnected = false;
 
-    /**
-     * @var callable
-     * @psalm-var (callable(): (Amp\Promise|void))|null
-     */
-    private $invokeOnDisconnect = null;
-
     private function __construct(private EncryptableSocket $socket)
     {
     }
@@ -78,21 +72,9 @@ final class AmpStreamConnection implements Connection
     public function close(): void
     {
         if ($this->isConnected) {
-            if ($this->invokeOnDisconnect !== null) {
-                Amp\asyncCall($this->invokeOnDisconnect);
-            }
-
-            $this->socket->close();
             $this->isConnected = false;
+            $this->socket->close();
         }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function onClose(callable $invoke): void
-    {
-        $this->invokeOnDisconnect = $invoke;
     }
 
     public function isConnected(): bool

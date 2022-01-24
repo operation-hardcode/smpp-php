@@ -26,7 +26,7 @@ final class ReplaceSmTest extends TestCase
         self::assertEquals('Hello, world :)', $frame->message);
         self::assertEquals('92399', $frame->source->value);
         self::assertEquals(TON::INTERNATIONAL, $frame->source->ton);
-        self::assertEquals(NPI::ISDN, $frame->source->npi);
+        self::assertEquals(NPI::UNKNOWN, $frame->source->npi);
         self::assertEmpty($frame->scheduleDeliveryTime);
         self::assertEmpty($frame->validityPeriod);
         self::assertEquals(0, $frame->registeredDelivery);
@@ -35,6 +35,6 @@ final class ReplaceSmTest extends TestCase
         $reply = $frame->reply();
         self::assertInstanceOf(ReplaceSmResp::class, $reply);
         self::assertEquals(4, $reply->sequence());
-        self::assertEquals(CommandStatus::ESME_ROK, $reply->status);
+        self::assertEquals(CommandStatus::ESME_ROK(), $reply->status);
     }
 }

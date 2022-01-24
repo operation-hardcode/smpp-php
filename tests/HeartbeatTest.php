@@ -25,7 +25,7 @@ final class HeartbeatTest extends SmppTestCase
         Amp\Loop::run(function (): \Generator {
             $connector = Connector::connect(function (): Amp\Promise {
                 $bytes = new \SplQueue();
-                $bytes->enqueue((string) (new BindTransceiverResp('3333'))->withSequence(1));
+                $bytes->enqueue((string) (new BindTransceiverResp('3333', CommandStatus::ESME_ROK()))->withSequence(1));
                 $bytes->enqueue(new Amp\Delayed(20));
 
                 return new Amp\Success(new InMemoryConnection($bytes));
@@ -52,6 +52,10 @@ final class HeartbeatTest extends SmppTestCase
                 //
             });
 
+            yield Amp\delay(30);
+
+            Amp\Loop::stop();
+
             self::assertInstanceOf(EnquireConnectionTimeoutException::class, $exception);
         });
     }
@@ -61,8 +65,8 @@ final class HeartbeatTest extends SmppTestCase
         Amp\Loop::run(function (): \Generator {
             $connector = Connector::connect(function (): Amp\Promise {
                 $bytes = new \SplQueue();
-                $bytes->enqueue((string) (new BindTransceiverResp('3333'))->withSequence(1));
-                $bytes->enqueue((string) (new EnquireLinkResp())->withSequence(2));
+                $bytes->enqueue((string) (new BindTransceiverResp('3333', CommandStatus::ESME_ROK()))->withSequence(1));
+                $bytes->enqueue((string) (new EnquireLinkResp(CommandStatus::ESME_ROK()))->withSequence(2));
 
                 return new Amp\Success(new InMemoryConnection($bytes));
             });
@@ -93,7 +97,7 @@ final class HeartbeatTest extends SmppTestCase
 
             self::assertNull($exception);
             self::assertInstanceOf(EnquireLinkResp::class, $command);
-            self::assertEquals(CommandStatus::ESME_ROK, $command->status);
+            self::assertEquals(CommandStatus::ESME_ROK(), $command->status);
         });
     }
 }

@@ -21,8 +21,8 @@ final class Unbind extends PDU implements Replyable
         return new Unbind();
     }
 
-    public function reply(CommandStatus $status = CommandStatus::ESME_ROK): PDU
+    public function reply(?CommandStatus $status = null): PDU
     {
-        return (new UnbindResp($status))->withSequence($this->sequence());
+        return (new UnbindResp($status ?: CommandStatus::ESME_ROK()))->withSequence($this->sequence());
     }
 }

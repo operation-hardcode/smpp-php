@@ -31,12 +31,12 @@ final class CancelSmTest extends TestCase
         self::assertEquals(NPI::UNKNOWN, $frame->source->npi);
         self::assertEquals('222', $frame->destination->value);
         self::assertEquals(TON::INTERNATIONAL, $frame->destination->ton);
-        self::assertEquals(NPI::ISDN, $frame->destination->npi);
+        self::assertEquals(NPI::UNKNOWN, $frame->destination->npi);
         self::assertEquals('test', $frame->serviceType);
 
         $reply = $frame->reply();
         self::assertInstanceOf(CancelSmResp::class, $reply);
         self::assertEquals(2, $reply->sequence());
-        self::assertEquals(CommandStatus::ESME_ROK, $reply->status);
+        self::assertEquals(CommandStatus::ESME_ROK(), $reply->status);
     }
 }

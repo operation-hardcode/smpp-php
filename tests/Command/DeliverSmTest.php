@@ -9,6 +9,7 @@ use OperationHardcode\Smpp\Protocol\Command\DeliverSmResp;
 use OperationHardcode\Smpp\Protocol\CommandStatus;
 use OperationHardcode\Smpp\Protocol\Destination;
 use OperationHardcode\Smpp\Protocol\FrameParser;
+use OperationHardcode\Smpp\Protocol\Message\Utf8Message;
 use PHPUnit\Framework\TestCase;
 
 final class DeliverSmTest extends TestCase
@@ -18,7 +19,7 @@ final class DeliverSmTest extends TestCase
         $command = (new DeliverSm(
             new Destination('99900238'),
             new Destination('00900238'),
-            'Hello, world!000',
+            new Utf8Message('Hello, world!000'),
         ))->withSequence(5);
 
         $bytes = (string) $command;
@@ -29,13 +30,13 @@ final class DeliverSmTest extends TestCase
         self::assertInstanceOf(DeliverSm::class, $frame);
         self::assertEquals(5, $frame->sequence());
         self::assertEmpty($frame->serviceType);
-        self::assertEquals('Hello, world!000', $frame->message);
+        self::assertEquals('Hello, world!000', $frame->message->text());
         self::assertEquals('99900238', $frame->from->value);
         self::assertEquals('00900238', $frame->to->value);
 
         $reply = $frame->reply();
         self::assertInstanceOf(DeliverSmResp::class, $reply);
         self::assertEquals(5, $reply->sequence());
-        self::assertEquals(CommandStatus::ESME_ROK, $reply->status);
+        self::assertEquals(CommandStatus::ESME_ROK(), $reply->status);
     }
 }

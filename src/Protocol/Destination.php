@@ -12,7 +12,7 @@ final class Destination
     public function __construct(
         public readonly string|null $value,
         public readonly TON|null $ton = TON::INTERNATIONAL,
-        public readonly NPI|null $npi = NPI::ISDN,
+        public readonly NPI|null $npi = NPI::UNKNOWN,
     ) {
     }
 }

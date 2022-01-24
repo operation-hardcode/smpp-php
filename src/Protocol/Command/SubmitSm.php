@@ -7,8 +7,12 @@ namespace OperationHardcode\Smpp\Protocol\Command;
 use OperationHardcode\Smpp\Buffer;
 use OperationHardcode\Smpp\Protocol\Command;
 use OperationHardcode\Smpp\Protocol\CommandStatus;
+use OperationHardcode\Smpp\Protocol\DataCoding;
 use OperationHardcode\Smpp\Protocol\Destination;
 use OperationHardcode\Smpp\Protocol\EsmeClass;
+use OperationHardcode\Smpp\Protocol\Message\Message;
+use OperationHardcode\Smpp\Protocol\Message\MessageFactory;
+use OperationHardcode\Smpp\Protocol\Message\Utf8Message;
 use OperationHardcode\Smpp\Protocol\NPI;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Protocol\TON;
@@ -18,7 +22,7 @@ final class SubmitSm extends PDU implements Replyable
     public function __construct(
         public readonly Destination $from,
         public readonly Destination $to,
-        public readonly string $message,
+        public readonly Message $message,
         public readonly string $serviceType = '',
         public readonly EsmeClass|int $esmeClass = EsmeClass::STORE_AND_FORWARD,
         public readonly int $protocolId = 0x00,
@@ -27,8 +31,6 @@ final class SubmitSm extends PDU implements Replyable
         public readonly ?string $validityPeriod = null,
         public readonly int $registeredDeliveryFlag = 0x00,
         public readonly int $replaceIfPresentFlag = 0x00,
-        public readonly int $dataCoding = 0,
-        public readonly ?int $defaultMessageId = null,
     ) {
     }
 
@@ -53,10 +55,10 @@ final class SubmitSm extends PDU implements Replyable
             ->appendString($this->validityPeriod)
             ->appendUint8($this->registeredDeliveryFlag)
             ->appendUint8($this->replaceIfPresentFlag)
-            ->appendUint8($this->dataCoding)
-            ->appendUint8OrNull($this->defaultMessageId)
-            ->appendUint8(strlen($this->message))
-            ->appendString($this->message)
+            ->appendUint8($this->message->coding()->value)
+            ->appendUint8OrNull($this->message->id())
+            ->appendUint8($this->message->length())
+            ->appendString($this->message->text())
             ->toBytes($this->sequence(), Command::SUBMIT_SM);
     }
 
@@ -76,14 +78,14 @@ final class SubmitSm extends PDU implements Replyable
         $validityPeriod = $buffer->consumeString();
         $registeredDelivery = $buffer->consumeUint8();
         $replaceIfPresent = $buffer->consumeUint8();
-        $dataCoding = $buffer->consumeUint8();
+        $dataCoding = DataCoding::tryFrom($buffer->consumeUint8()) ?: DataCoding::DATA_CODING_DEFAULT;
         $msgDefaultId = $buffer->consumeUint8();
         $shortMessage = $buffer->consume($buffer->consumeUint8());
 
         return new SubmitSm(
             new Destination($sourceAddress, $sourceAddrTon, $sourceAddrNpi),
             new Destination($destinationAddress, $destinationAddrTon, $destinationAddrNpi),
-            $shortMessage,
+            MessageFactory::create($dataCoding, $shortMessage, $msgDefaultId),
             $serviceType,
             $esmeClass,
             $protocolId,
@@ -92,13 +94,11 @@ final class SubmitSm extends PDU implements Replyable
             $validityPeriod,
             $registeredDelivery,
             $replaceIfPresent,
-            $dataCoding,
-            $msgDefaultId,
         );
     }
 
-    public function reply(CommandStatus $status = CommandStatus::ESME_ROK): PDU
+    public function reply(?CommandStatus $status = null): PDU
     {
-        return (new SubmitSmResp($status))->withSequence($this->sequence());
+        return (new SubmitSmResp($status ?: CommandStatus::ESME_ROK()))->withSequence($this->sequence());
     }
 }

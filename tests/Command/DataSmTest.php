@@ -30,12 +30,12 @@ final class DataSmTest extends TestCase
         self::assertEquals('test', $frame->serviceType);
         self::assertEquals('929222', $frame->source->value);
         self::assertEquals(TON::INTERNATIONAL, $frame->source->ton);
-        self::assertEquals(NPI::ISDN, $frame->source->npi);
+        self::assertEquals(NPI::UNKNOWN, $frame->source->npi);
         self::assertEquals('0020200', $frame->destination->value);
         self::assertEquals(TON::INTERNATIONAL, $frame->destination->ton);
-        self::assertEquals(NPI::ISDN, $frame->destination->npi);
+        self::assertEquals(NPI::UNKNOWN, $frame->destination->npi);
         self::assertEquals(EsmeClass::FORWARD, $frame->esmeClass);
         self::assertEquals(0, $frame->registeredDelivery);
-        self::assertEquals(0, $frame->dataCoding);
+        self::assertEquals(0, $frame->dataCoding->value);
     }
 }

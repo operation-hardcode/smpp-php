@@ -4,34 +4,16 @@ declare(strict_types=1);
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use Amp\Log\ConsoleFormatter;
-use Amp\Log\StreamHandler;
-use Monolog\Logger;
-use Monolog\Processor\MemoryPeakUsageProcessor;
-use Monolog\Processor\MemoryUsageProcessor;
-use Monolog\Processor\ProcessorInterface;
-use Monolog\Processor\PsrLogMessageProcessor;
 use OperationHardcode\Smpp;
 use OperationHardcode\Smpp\Interaction\Connector;
 use OperationHardcode\Smpp\Interaction\Heartbeat\Heartbeat;
 use OperationHardcode\Smpp\Interaction\SmppExecutor;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Transport\ConnectionContext;
-use Psr\Log\LoggerInterface;
-
-/**
- * @param ProcessorInterface[] $processors
- */
-function stdoutLogger(string $loggerName, array $processors = []): LoggerInterface
-{
-    $handler = new StreamHandler(Amp\ByteStream\getStdout());
-    $handler->setFormatter(new ConsoleFormatter());
-
-    return new Logger($loggerName, [$handler], [new PsrLogMessageProcessor(), new MemoryUsageProcessor(), new MemoryPeakUsageProcessor(), ...$processors]);
-}
+use Psr\Log\NullLogger;
 
 Amp\Loop::run(function (): \Generator {
-    $logger = stdoutLogger('transceiver');
+    $logger = new NullLogger();
 
     $transceiver = Connector::connect()
         ->asTransceiver(
@@ -46,12 +28,6 @@ Amp\Loop::run(function (): \Generator {
             )
         ]);
 
-    Amp\Loop::unreference(
-        Amp\Loop::onSignal(\SIGINT, function () use ($transceiver): \Generator {
-            yield $transceiver->fin();
-        })
-    );
-
     try {
         yield $transceiver->consume(function (PDU $pdu, SmppExecutor $executor): \Generator {
            if ($pdu instanceof Smpp\Protocol\Command\Replyable) {
@@ -60,15 +36,23 @@ Amp\Loop::run(function (): \Generator {
                 yield $executor->produce($reply);
 
                 if ($pdu instanceof Smpp\Protocol\Command\DeliverSm) {
-                    yield $executor->produce(new Smpp\Protocol\Command\SubmitSm($pdu->to, $pdu->from, 'Activate', $pdu->serviceType, 28));
+                    yield $executor->produce(new Smpp\Protocol\Command\SubmitSm($pdu->to, $pdu->from, new Smpp\Protocol\Message\Utf8Message('Hello'), $pdu->serviceType, Smpp\Protocol\EsmeClass::STORE_AND_FORWARD));
                 }
             }
 
             return new Amp\Success();
         });
+
+        echo "Send [Ctrl+C] to quit".\PHP_EOL;
     } catch (\Throwable $e) {
         echo $e->getMessage() . \PHP_EOL;
 
         Amp\Loop::stop();
     }
+
+    Amp\Loop::unreference(
+        Amp\Loop::onSignal(\SIGINT, function () use ($transceiver): \Generator {
+            yield $transceiver->fin();
+        })
+    );
 });

@@ -13,12 +13,12 @@ final class GenericNackTest extends TestCase
 {
     public function testBinary(): void
     {
-        $bytes = (string) new GenericNack(CommandStatus::ESME_RINVCMDID);
+        $bytes = (string) new GenericNack(CommandStatus::ESME_RINVCMDID());
 
         self::assertTrue(FrameParser::hasFrame($bytes));
         $frame = FrameParser::parse($bytes);
         self::assertInstanceOf(GenericNack::class, $frame);
         self::assertEquals(0, $frame->sequence());
-        self::assertEquals(CommandStatus::ESME_RINVCMDID, $frame->status);
+        self::assertEquals(CommandStatus::ESME_RINVCMDID(), $frame->status);
     }
 }

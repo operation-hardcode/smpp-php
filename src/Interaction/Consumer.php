@@ -42,20 +42,11 @@ final class Consumer
 
     /**
      * @psalm-param callable(PDU, SmppExecutor): Amp\Promise<void> $onMessage
-     *
-     * @psalm-return Amp\Success<void>|Amp\Failure<\Throwable>
      */
-    public function listen(callable $onMessage, SmppExecutor $executor): Amp\Promise
+    public function listen(callable $onMessage, SmppExecutor $executor): void
     {
-        /** @psalm-var Amp\Success<void>|Amp\Failure<\Throwable> */
-        return Amp\call(function () use ($onMessage, $executor): \Generator {
-            $running = true;
-
-            $this->connection->onClose(function () use (&$running): void {
-                $running = false;
-            });
-
-            while ($running && $this->connection->isConnected()) {
+        Amp\asyncCall(function () use ($onMessage, $executor): \Generator {
+            while ($this->connection->isConnected()) {
                 if (null !== ($bytes = yield $this->connection->read())) {
                     try {
                         if (FrameParser::hasFrame($bytes)) {

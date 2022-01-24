@@ -13,7 +13,7 @@ final class QuerySmRespTest extends TestCase
 {
     public function testBinary(): void
     {
-        $bytes = (string) (new QuerySmResp('929292', 1, 0))->withSequence(22);
+        $bytes = (string) (new QuerySmResp('929292', 1, 0, CommandStatus::ESME_ROK()))->withSequence(22);
         self::assertTrue(FrameParser::hasFrame($bytes));
         $frame = FrameParser::parse($bytes);
         self::assertInstanceOf(QuerySmResp::class, $frame);
@@ -21,6 +21,6 @@ final class QuerySmRespTest extends TestCase
         self::assertEquals(1, $frame->messageState);
         self::assertEquals(0, $frame->errorCode);
         self::assertEmpty($frame->finalDate);
-        self::assertEquals(CommandStatus::ESME_ROK, $frame->status);
+        self::assertEquals(CommandStatus::ESME_ROK(), $frame->status);
     }
 }
