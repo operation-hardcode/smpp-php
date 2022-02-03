@@ -26,11 +26,11 @@ final class CancelSm extends PDU implements Replyable
     {
         $serviceType = $buffer->consumeString();
         $messageId = $buffer->consumeString();
-        $sourceAddrTon = TON::tryFrom($buffer->consumeUint8());
-        $sourceAddrNpi = NPI::tryFrom($buffer->consumeUint8());
+        $sourceAddrTon = TON::try($buffer->consumeUint8());
+        $sourceAddrNpi = NPI::try($buffer->consumeUint8());
         $sourceAddr = $buffer->consumeString();
-        $destinationAddrTon = TON::tryFrom($buffer->consumeUint8());
-        $destinationAddrNpi = NPI::tryFrom($buffer->consumeUint8());
+        $destinationAddrTon = TON::try($buffer->consumeUint8());
+        $destinationAddrNpi = NPI::try($buffer->consumeUint8());
         $destinationAddr = $buffer->consumeString();
 
         return new CancelSm(
