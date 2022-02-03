@@ -12,7 +12,6 @@ use OperationHardcode\Smpp\Protocol\Destination;
 use OperationHardcode\Smpp\Protocol\EsmeClass;
 use OperationHardcode\Smpp\Protocol\Message\Message;
 use OperationHardcode\Smpp\Protocol\Message\MessageFactory;
-use OperationHardcode\Smpp\Protocol\Message\Utf8Message;
 use OperationHardcode\Smpp\Protocol\NPI;
 use OperationHardcode\Smpp\Protocol\PDU;
 use OperationHardcode\Smpp\Protocol\TON;
@@ -38,11 +37,11 @@ final class SubmitSm extends PDU implements Replyable
     {
         return Buffer::new()
             ->appendString($this->serviceType)
-            ->appendUint8($this->from->ton?->value ?: 0)
-            ->appendUint8($this->from->npi?->value ?: 0)
+            ->appendUint8($this->from->ton->value)
+            ->appendUint8($this->from->npi->value)
             ->appendString($this->from->value)
-            ->appendUint8($this->to->ton?->value ?: 0)
-            ->appendUint8($this->to->npi?->value ?: 0)
+            ->appendUint8($this->to->ton->value)
+            ->appendUint8($this->to->npi->value)
             ->appendString($this->to->value)
             ->appendUint8(
                 $this->esmeClass instanceof EsmeClass

@@ -46,11 +46,11 @@ final class CancelSm extends PDU implements Replyable
         return Buffer::new()
             ->appendString($this->serviceType)
             ->appendString($this->messageId)
-            ->appendUint8($this->source->ton?->value ?: 0)
-            ->appendUint8($this->source->npi?->value ?: 0)
+            ->appendUint8($this->source->ton->value)
+            ->appendUint8($this->source->npi->value)
             ->appendString($this->source->value)
-            ->appendUint8($this->destination->ton?->value ?: 0)
-            ->appendUint8($this->destination->npi?->value ?: 0)
+            ->appendUint8($this->destination->ton->value)
+            ->appendUint8($this->destination->npi->value)
             ->appendString($this->destination->value)
             ->toBytes($this->sequence(), Command::CANCEL_SM);
     }

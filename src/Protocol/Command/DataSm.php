@@ -53,11 +53,11 @@ final class DataSm extends PDU
     {
         return Buffer::new()
             ->appendString($this->serviceType)
-            ->appendUint8($this->source->ton?->value ?: 0)
-            ->appendUint8($this->source->npi?->value ?: 0)
+            ->appendUint8($this->source->ton->value)
+            ->appendUint8($this->source->npi->value)
             ->appendString($this->source->value)
-            ->appendUint8($this->destination->ton?->value ?: 0)
-            ->appendUint8($this->destination->npi?->value ?: 0)
+            ->appendUint8($this->destination->ton->value)
+            ->appendUint8($this->destination->npi->value)
             ->appendString($this->destination->value)
             ->appendUint8(
                 $this->esmeClass instanceof EsmeClass

@@ -17,7 +17,7 @@ final class CancelSmTest extends TestCase
 {
     public function testBinary(): void
     {
-        $cancelSm = (new CancelSm(new Destination('1111', null, null), new Destination('222'), 'test'))->withSequence(2);
+        $cancelSm = (new CancelSm(new Destination('1111'), new Destination('222'), 'test'))->withSequence(2);
 
         $bytes = (string) $cancelSm;
 
@@ -27,7 +27,7 @@ final class CancelSmTest extends TestCase
         self::assertInstanceOf(CancelSm::class, $frame);
         self::assertEquals(2, $frame->sequence());
         self::assertEquals('1111', $frame->source->value);
-        self::assertEquals(TON::UNKNOWN, $frame->source->ton);
+        self::assertEquals(TON::INTERNATIONAL, $frame->source->ton);
         self::assertEquals(NPI::UNKNOWN, $frame->source->npi);
         self::assertEquals('222', $frame->destination->value);
         self::assertEquals(TON::INTERNATIONAL, $frame->destination->ton);

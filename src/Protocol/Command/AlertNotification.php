@@ -39,11 +39,11 @@ final class AlertNotification extends PDU
     public function __toString(): string
     {
         return Buffer::new()
-            ->appendUint8($this->source->ton?->value ?: 0)
-            ->appendUint8($this->source->npi?->value ?: 0)
+            ->appendUint8($this->source->ton->value)
+            ->appendUint8($this->source->npi->value)
             ->appendString($this->source->value)
-            ->appendUint8($this->esme->ton?->value ?: 0)
-            ->appendUint8($this->esme->npi?->value ?: 0)
+            ->appendUint8($this->esme->ton->value)
+            ->appendUint8($this->esme->npi->value)
             ->appendString($this->esme->value)
             ->toBytes($this->sequence(), Command::ALERT_NOTIFICATION);
     }

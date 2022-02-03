@@ -52,8 +52,8 @@ final class ReplaceSm extends PDU implements Replyable
     {
         return Buffer::new()
             ->appendString($this->messageId)
-            ->appendUint8($this->source->ton?->value ?: 0)
-            ->appendUint8($this->source->npi?->value ?: 0)
+            ->appendUint8($this->source->ton->value)
+            ->appendUint8($this->source->npi->value)
             ->appendString($this->source->value)
             ->appendString($this->scheduleDeliveryTime)
             ->appendString($this->validityPeriod)

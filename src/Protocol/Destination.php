@@ -10,9 +10,9 @@ namespace OperationHardcode\Smpp\Protocol;
 final class Destination
 {
     public function __construct(
-        public readonly string|null $value,
-        public readonly TON|null $ton = TON::INTERNATIONAL,
-        public readonly NPI|null $npi = NPI::UNKNOWN,
+        public readonly string $value,
+        public readonly TON $ton = TON::INTERNATIONAL,
+        public readonly NPI $npi = NPI::UNKNOWN,
     ) {
     }
 }
