@@ -14,7 +14,7 @@ final class AmpStreamConnection implements Connection
 {
     private bool $isConnected = false;
 
-    private function __construct(private EncryptableSocket $socket)
+    public function __construct(private EncryptableSocket $socket)
     {
     }
 
