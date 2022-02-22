@@ -17,7 +17,12 @@ final class Utf8Message implements Message
         return \strlen($this->text);
     }
 
-    public function text(): string
+    public function encode(): string
+    {
+        return $this->text;
+    }
+
+    public function decode(): string
     {
         return $this->text;
     }
@@ -32,7 +37,7 @@ final class Utf8Message implements Message
         return $this->id;
     }
 
-    public function jsonSerialize(): mixed
+    public function jsonSerialize(): string
     {
         return $this->text;
     }

@@ -30,7 +30,7 @@ final class DeliverSmTest extends TestCase
         self::assertInstanceOf(DeliverSm::class, $frame);
         self::assertEquals(5, $frame->sequence());
         self::assertEmpty($frame->serviceType);
-        self::assertEquals('Hello, world!000', $frame->message->text());
+        self::assertEquals('Hello, world!000', $frame->message->encode());
         self::assertEquals('99900238', $frame->from->value);
         self::assertEquals('00900238', $frame->to->value);
 

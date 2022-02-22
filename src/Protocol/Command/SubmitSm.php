@@ -57,7 +57,7 @@ final class SubmitSm extends PDU implements Replyable
             ->appendUint8($this->message->coding()->value)
             ->appendUint8OrNull($this->message->id())
             ->appendUint8($this->message->length())
-            ->appendString($this->message->text())
+            ->appendString($this->message->encode())
             ->toBytes($this->sequence(), Command::SUBMIT_SM);
     }
 

@@ -8,19 +8,26 @@ use OperationHardcode\Smpp\Protocol\DataCoding;
 
 final class UnicodeMessage implements Message
 {
-    public function __construct(private string $text, private ?int $id = null)
+    private string $encoded;
+
+    public function __construct(string $text, private ?int $id = null)
     {
-        $this->text = $this->convert($this->text);
+        $this->encoded = $this->doEncode($text);
     }
 
     public function length(): int
     {
-        return \strlen($this->text);
+        return \strlen($this->encoded);
     }
 
-    public function text(): string
+    public function encode(): string
     {
-        return $this->text;
+        return $this->encoded;
+    }
+
+    public function decode(): string
+    {
+        return $this->doDecode($this->encoded);
     }
 
     public function coding(): DataCoding
@@ -33,17 +40,28 @@ final class UnicodeMessage implements Message
         return $this->id;
     }
 
-    public function jsonSerialize(): mixed
+    public function jsonSerialize(): string
     {
-        return $this->text;
+        return $this->encoded;
     }
 
-    private function convert(string $text): string
+    private function doEncode(string $text): string
     {
         $message = iconv('utf-8', 'UCS-2BE', $text);
 
         if (false === $message) {
             throw new \InvalidArgumentException('Message cannot be encoded to UCS-2BE.');
+        }
+
+        return $message;
+    }
+
+    private function doDecode(string $text): string
+    {
+        $message = iconv('UCS-2BE', 'utf-8', $text);
+
+        if (false === $message) {
+            throw new \InvalidArgumentException('Message cannot be encoded to utf-8.');
         }
 
         return $message;

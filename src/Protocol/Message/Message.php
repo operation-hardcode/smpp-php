@@ -9,7 +9,16 @@ use OperationHardcode\Smpp\Protocol\DataCoding;
 interface Message extends \JsonSerializable
 {
     public function length(): int;
-    public function text(): string;
+
+    /**
+     * @throws \InvalidArgumentException
+     */
+    public function encode(): string;
+
+    /**
+     * @throws \InvalidArgumentException
+     */
+    public function decode(): string;
     public function coding(): DataCoding;
     public function id(): ?int;
 }

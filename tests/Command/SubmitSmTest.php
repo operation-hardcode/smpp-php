@@ -38,7 +38,7 @@ final class SubmitSmTest extends TestCase
         self::assertEquals('02002', $frame->to->value);
         self::assertEquals(TON::INTERNATIONAL, $frame->to->ton);
         self::assertEquals(NPI::UNKNOWN, $frame->to->npi);
-        self::assertEquals('Hello, world!0!0', $frame->message->text());
+        self::assertEquals('Hello, world!0!0', $frame->message->encode());
         self::assertEquals('test', $frame->serviceType);
         self::assertEmpty($frame->scheduleDeliveryTime);
         self::assertEmpty($frame->validityPeriod);

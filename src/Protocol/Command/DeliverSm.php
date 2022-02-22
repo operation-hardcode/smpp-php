@@ -54,7 +54,7 @@ final class DeliverSm extends PDU implements Replyable
             ->appendUint8($this->message->coding()->value)
             ->padding() // sm_default_msg_id
             ->appendUint8($this->message->length())
-            ->appendString($this->message->text())
+            ->appendString($this->message->encode())
             ->toBytes($this->sequence(), Command::DELIVER_SM)
         ;
     }

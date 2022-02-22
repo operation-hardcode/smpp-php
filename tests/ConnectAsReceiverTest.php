@@ -161,7 +161,7 @@ final class ConnectAsReceiverTest extends SmppTestCase
             self::assertEquals('1000', $command->to->value);
             self::assertEquals(TON::INTERNATIONAL, $command->to->ton);
             self::assertEquals(NPI::UNKNOWN, $command->to->npi);
-            self::assertEquals('Hello from test.', $command->message->text());
+            self::assertEquals('Hello from test.', $command->message->encode());
             self::assertEquals(EsmeClass::STORE_AND_FORWARD, $command->esmeClass);
             self::assertEquals(0, $command->protocolId);
             self::assertEquals(0, $command->priority);
