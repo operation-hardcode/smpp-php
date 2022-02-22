@@ -16,5 +16,5 @@ interface Message extends \JsonSerializable, \Stringable
     public function encode(): string;
     public function coding(): DataCoding;
     public function id(): ?int;
-    public static function fromEncoded(string $encoded, ?int $msg = null): self;
+    public static function fromEncoded(string $encoded, ?int $msgId = null): self;
 }
