@@ -8,26 +8,26 @@ use OperationHardcode\Smpp\Protocol\DataCoding;
 
 final class UnicodeMessage implements Message
 {
-    private string $encoded;
+    private string $text;
 
     public function __construct(string $text, private ?int $id = null)
     {
-        $this->encoded = $this->doEncode($text);
+        $this->text = $text;
     }
 
     public function length(): int
     {
-        return \strlen($this->encoded);
+        return \strlen(self::doEncode($this->text));
     }
 
     public function encode(): string
     {
-        return $this->encoded;
+        return self::doEncode($this->text);
     }
 
-    public function decode(): string
+    public function __toString(): string
     {
-        return $this->doDecode($this->encoded);
+        return $this->text;
     }
 
     public function coding(): DataCoding
@@ -42,10 +42,15 @@ final class UnicodeMessage implements Message
 
     public function jsonSerialize(): string
     {
-        return $this->encoded;
+        return self::doEncode($this->text);
     }
 
-    private function doEncode(string $text): string
+    public static function fromEncoded(string $encoded, ?int $msgId = null): self
+    {
+        return new UnicodeMessage(self::doDecode($encoded), $msgId);
+    }
+
+    private static function doEncode(string $text): string
     {
         $message = iconv('utf-8', 'UCS-2BE', $text);
 
@@ -56,9 +61,9 @@ final class UnicodeMessage implements Message
         return $message;
     }
 
-    private function doDecode(string $text): string
+    private static function doDecode(string $text): string
     {
-        $message = iconv('UCS-2BE', 'utf-8', $text);
+        $message = iconv('UCS-2BE', 'UTF-8', $text);
 
         if (false === $message) {
             throw new \InvalidArgumentException('Message cannot be encoded to utf-8.');

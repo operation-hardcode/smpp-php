@@ -6,7 +6,7 @@ namespace OperationHardcode\Smpp\Protocol\Message;
 
 use OperationHardcode\Smpp\Protocol\DataCoding;
 
-interface Message extends \JsonSerializable
+interface Message extends \JsonSerializable, \Stringable
 {
     public function length(): int;
 
@@ -14,11 +14,7 @@ interface Message extends \JsonSerializable
      * @throws \InvalidArgumentException
      */
     public function encode(): string;
-
-    /**
-     * @throws \InvalidArgumentException
-     */
-    public function decode(): string;
     public function coding(): DataCoding;
     public function id(): ?int;
+    public static function fromEncoded(string $encoded, ?int $msg = null): self;
 }

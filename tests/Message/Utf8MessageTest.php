@@ -13,8 +13,9 @@ final class Utf8MessageTest extends TestCase
     {
         $message = new Utf8Message('Hello, world');
         self::assertEquals('Hello, world', $message->encode());
-        self::assertEquals('Hello, world', $message->decode());
+        self::assertEquals('Hello, world', (string)  $message);
         self::assertEquals(strlen('Hello, world'), $message->length());
         self::assertNull($message->id());
+        self::assertEquals('Hello, world', Utf8Message::fromEncoded('Hello, world')->encode());
     }
 }

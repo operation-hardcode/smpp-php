@@ -13,8 +13,12 @@ final class UnicodeMessageTest extends TestCase
     {
         $message = new UnicodeMessage('Привет, мир');
         self::assertNotEquals('Привет, мир', $message->encode());
-        self::assertEquals('Привет, мир', $message->decode());
+        self::assertEquals('Привет, мир', (string) $message);
         self::assertEquals(strlen($message->encode()), $message->length());
         self::assertNull($message->id());
+
+        $encodedMessage = UnicodeMessage::fromEncoded($encoded = $message->encode());
+        self::assertEquals($encoded, $encodedMessage->encode());
+        self::assertEquals('Привет, мир', (string) $encodedMessage);
     }
 }

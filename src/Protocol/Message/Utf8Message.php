@@ -22,11 +22,6 @@ final class Utf8Message implements Message
         return $this->text;
     }
 
-    public function decode(): string
-    {
-        return $this->text;
-    }
-
     public function coding(): DataCoding
     {
         return DataCoding::DATA_CODING_DEFAULT;
@@ -37,8 +32,18 @@ final class Utf8Message implements Message
         return $this->id;
     }
 
+    public function __toString(): string
+    {
+        return $this->text;
+    }
+
     public function jsonSerialize(): string
     {
         return $this->text;
+    }
+
+    public static function fromEncoded(string $encoded, ?int $msgId = null): self
+    {
+        return new Utf8Message($encoded, $msgId);
     }
 }
