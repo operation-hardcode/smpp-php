@@ -50,7 +50,7 @@ final class Heartbeat implements
 
                 Amp\Loop::unreference(
                     Amp\Loop::delay($this->timeout->duration, function () use ($sequence, $smppExecutor): \Generator {
-                        if (($this->heartbeats[$sequence] ?? null)?->status !== CommandStatus::ESME_ROK()->status) {
+                        if (($this->heartbeats[$sequence] ?? null)?->status->status !== CommandStatus::ESME_ROK()->status) {
                             $this->logger->error('Response for heartbeat with id "{id}" was not received.', [
                                 'id' => $sequence,
                             ]);
