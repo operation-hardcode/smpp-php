@@ -43,13 +43,14 @@ final class HeartbeatTest extends SmppTestCase
                         Time::fromMilliseconds(10),
                         $logger,
                     ),
-                    new MonitorConnection(onDisconnection: function (\Throwable $e) use (&$exception): void {
-                        $exception = $e;
-                    })
                 ]);
 
             yield $executor->consume(function (PDU $pdu, SmppExecutor $smppExecutor): void {
                 //
+            });
+
+            Amp\Loop::setErrorHandler(function (\Throwable $e) use (&$exception): void {
+                $exception = $e;
             });
 
             yield Amp\delay(30);

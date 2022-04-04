@@ -154,6 +154,23 @@ final class SmppExecutor
             foreach ($this->afterConnectionClosedExtensions as $extension) {
                 yield $extension->afterConnectionClosed($e ?? null);
             }
+
+            if ($e !== null) {
+                return new Amp\Failure($e);
+            }
+        });
+    }
+
+    /**
+     * @psalm-return Amp\Promise<Connection>
+     */
+    public function reconnect(): Amp\Promise
+    {
+        /** @psalm-var Amp\Success<Connection> */
+        return Amp\call(function (): \Generator {
+            yield $this->fin();
+
+            return yield $this->doConnect();
         });
     }
 
@@ -167,19 +184,6 @@ final class SmppExecutor
             if ($this->connection?->isConnected() === true) {
                 return $this->connection;
             }
-
-            return yield $this->doConnect();
-        });
-    }
-
-    /**
-     * @psalm-return Amp\Promise<Connection>
-     */
-    private function reconnect(): Amp\Promise
-    {
-        /** @psalm-var Amp\Success<Connection> */
-        return Amp\call(function (): \Generator {
-            yield $this->fin();
 
             return yield $this->doConnect();
         });
