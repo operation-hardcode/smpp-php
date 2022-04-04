@@ -131,11 +131,14 @@ final class SmppExecutor
     }
 
     /**
-     * @psalm-return Amp\Promise<void>
+     * @psalm-template T as \Throwable
+     * @psalm-param T|null $e
+     *
+     * @psalm-return (T is null ? Amp\Promise<void> : Amp\Promise<T>)
      */
     public function fin(?\Throwable $e = null): Amp\Promise
     {
-        /** @psalm-var Amp\Promise<void> */
+        /** @psalm-var (T is null ? Amp\Promise<void> : Amp\Promise<T>) */
         return Amp\call(function () use ($e): \Generator {
             $this->logger->log($e ? LogLevel::ERROR : LogLevel::DEBUG, 'Closing connection...', [
                 'exception' => $e,

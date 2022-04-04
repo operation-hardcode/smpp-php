@@ -25,6 +25,6 @@ Amp\Loop::run(function (): \Generator {
             yield $executor->fin();
         });
     } catch (\Throwable $e) {
-        dump($e->getMessage());
+
     }
 });
